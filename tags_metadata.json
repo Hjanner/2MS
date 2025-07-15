@@ -1,0 +1,58 @@
+[
+    {
+        "name": "Clientes",
+        "description": "Operaciones con Clientes"
+    },
+    {
+        "name": "Ventas",
+        "description": "Operaciones con Ventas"
+    },
+    {
+        "name": "TasasCambio",
+        "description": "Operaciones con Tasas de Cambio"
+    },
+    {
+        "name": "Productos",
+        "description": "Operaciones con Productos"
+    },
+    {
+        "name": "categoria_productos",
+        "description": "Operaciones con Categorías de Productos"
+    },
+    {
+        "name": "Proveedores",
+        "description": "Operaciones con Proveedores"
+    },
+    {
+        "name": "Compras",
+        "description": "Operaciones con Compras"
+    },
+    {
+        "name": "Productos_preparados",
+        "description": "Operaciones con Productos Preparados"
+    },
+    {
+        "name": "Productos_noPreparados",
+        "description": "Operaciones con Productos No Preparados"
+    },
+    {
+        "name": "Creditos",
+        "description": "Operaciones con Créditos"
+    },
+    {
+        "name": "Pagos",
+        "description": "Operaciones con Pagos"
+    },
+    {
+        "name": "Inventarios",
+        "description": "Operaciones con Inventarios"
+    },
+    {
+        "name": "Detalle_Venta",
+        "description": "Operaciones con Detalle de Venta"
+    },
+    {
+        "name": "Compra_Inventario",
+        "description": "Operaciones con Compra e Inventario"
+    }
+]
