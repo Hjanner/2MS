@@ -5,13 +5,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 db_name = os.getenv('SQLITE_DB')
+db_path = os.path.join(os.path.dirname(__file__), db_name)
 
 
 def get_connection():
     """Función para obtener conexión a la base de datos"""
     try:
         # Conectar a SQLite (crea el archivo si no existe)
-        conn = sqlite3.connect(db_name)        
+        conn = sqlite3.connect(db_path)        
         cursor = conn.cursor()
         print(f"Conectado a {db_name}")
         print("=" * 60)

@@ -1,11 +1,9 @@
 import sqlite3
 import os
-
-# Nombre del archivo de la base de datos
-db_name = os.getenv('SQLITE_DB', '2MS.db')
+from database import db_path
 
 def insert_data():
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     # Insertar datos en Clientes

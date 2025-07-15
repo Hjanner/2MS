@@ -1,8 +1,11 @@
 import sqlite3
 import os
+from database import db_name, db_path
 
-# Nombre del archivo de la base de datos
-db_name = os.getenv('SQLITE_DB', '2MS.db')
+
+print("Nombre de la base de datos:", db_name)
+print("Ruta de la base de datos:", db_path)
+
 
 # Todas las sentencias CREATE TABLE
 schema = """
@@ -139,7 +142,7 @@ CREATE TABLE IF NOT EXISTS Compra_Inventario (
 """
 
 def create_database():
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.executescript(schema)
     conn.commit()
