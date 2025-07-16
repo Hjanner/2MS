@@ -3,20 +3,30 @@ from typing import Type, List, Optional, Any
 
 class BaseService:
     """
-    Plantilla reusable para interactuar con cualquier tabla de tu base de datos, 
-    siempre y cuando esa tabla esté asociada a un modelo Pydantic 
+    Plantilla reusable para interactuar con cualquier tabla de tu base de datos,
+    siempre y cuando esa tabla esté asociada a un modelo Pydantic
     (o similar) que tenga los métodos to_dict() y from_dict().
     
-    Permite operaciones CRUD reutilizables para cualquier entidad, 
+    Permite operaciones CRUD reutilizables para cualquier entidad,
     solo necesitas pasar el modelo, el nombre de la tabla y la ruta de la base de datos.
     """
     
     def __init__(self, model: Type, table_name: str, db_path: str):
+        """
+        Inicializa el servicio base para una entidad.
+        :param model: Clase del modelo Pydantic.
+        :param table_name: Nombre de la tabla en la base de datos.
+        :param db_path: Ruta al archivo de la base de datos.
+        """
         self.model = model
         self.table_name = table_name
         self.db_path = db_path
 
     def get_all(self) -> List[Any]:
+        """
+        Obtiene todos los registros de la tabla.
+        :return: Lista de instancias del modelo.
+        """
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(f"SELECT * FROM {self.table_name}")
@@ -24,6 +34,12 @@ class BaseService:
             return [self.model.from_dict(dict(zip([col[0] for col in cursor.description], row))) for row in rows]
 
     def get_by_id(self, id_field: str, id_value: Any) -> Optional[Any]:
+        """
+        Obtiene un registro por su campo clave primaria.
+        :param id_field: Nombre del campo clave primaria.
+        :param id_value: Valor del campo clave primaria.
+        :return: Instancia del modelo o None si no existe.
+        """
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(f"SELECT * FROM {self.table_name} WHERE {id_field} = ?", (id_value,))
@@ -33,6 +49,10 @@ class BaseService:
             return None
 
     def create(self, obj_in) -> None:
+        """
+        Inserta un nuevo registro en la tabla.
+        :param obj_in: Instancia del modelo a insertar.
+        """
         data = obj_in.to_dict()
         fields = ', '.join(data.keys())
         placeholders = ', '.join(['?'] * len(data))
@@ -46,6 +66,13 @@ class BaseService:
             conn.commit()
 
     def update(self, id_field: str, id_value: Any, obj_in) -> bool:
+        """
+        Actualiza un registro existente en la tabla.
+        :param id_field: Nombre del campo clave primaria.
+        :param id_value: Valor del campo clave primaria.
+        :param obj_in: Instancia del modelo con los nuevos datos.
+        :return: True si se actualizó, False si no existe.
+        """
         data = obj_in.to_dict()
         fields = ', '.join([f"{k} = ?" for k in data.keys() if k != id_field])
         values = tuple([v for k, v in data.items() if k != id_field]) + (id_value,)
@@ -59,6 +86,12 @@ class BaseService:
             return cursor.rowcount > 0
 
     def delete(self, id_field: str, id_value: Any) -> bool:
+        """
+        Elimina un registro por su campo clave primaria.
+        :param id_field: Nombre del campo clave primaria.
+        :param id_value: Valor del campo clave primaria.
+        :return: True si se eliminó, False si no existe.
+        """
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(
