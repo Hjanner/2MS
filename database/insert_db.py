@@ -13,9 +13,9 @@ def insert_data():
                    ('V87654321', 'Ana Gómez', '04149876543', 'Administración'))
 
     # Insertar datos en Proveedores
-    cursor.execute("INSERT OR IGNORE INTO Proveedores (Rif, razon_social, dirección, tfl, persona_contacto) VALUES (?, ?, ?, ?, ?)",
+    cursor.execute("INSERT OR IGNORE INTO Proveedores (Rif, razon_social, direccion, tfl, persona_contacto) VALUES (?, ?, ?, ?, ?)",
                    ('J123456789', 'Proveedor Uno', 'Calle 1', '02121234567', 'Carlos López'))
-    cursor.execute("INSERT OR IGNORE INTO Proveedores (Rif, razon_social, dirección, tfl, persona_contacto) VALUES (?, ?, ?, ?, ?)",
+    cursor.execute("INSERT OR IGNORE INTO Proveedores (Rif, razon_social, direccion, tfl, persona_contacto) VALUES (?, ?, ?, ?, ?)",
                    ('J987654321', 'Proveedor Dos', 'Calle 2', '02129876543', 'María Ruiz'))
 
     # Insertar datos en categoria_productos

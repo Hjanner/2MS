@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS categoria_productos (
 CREATE TABLE IF NOT EXISTS Proveedores (
   Rif TEXT PRIMARY KEY,
   razon_social TEXT,
-  dirección TEXT,
+  direccion TEXT,
   tfl TEXT,
   persona_contacto TEXT
 );
@@ -69,8 +69,7 @@ CREATE TABLE IF NOT EXISTS Compras (
 
 CREATE TABLE IF NOT EXISTS Productos_preparados (
   cod_producto_preparado TEXT PRIMARY KEY,
-  -- Aquí falta el nombre de la columna, revisa tu SQL original
-  -- Ejemplo: nombre TEXT,
+  descr TEXT,
   FOREIGN KEY (cod_producto_preparado) REFERENCES Productos(cod_producto)
 );
 
