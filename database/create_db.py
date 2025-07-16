@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS Clientes (
 CREATE TABLE IF NOT EXISTS Ventas (
   id_venta INTEGER PRIMARY KEY AUTOINCREMENT,
   monto_total_bs REAL,
-  iva REAL,
   fecha DATE,
   monto_total_usd REAL,
   tipo TEXT CHECK (tipo IN ('credito', 'de_contado')),
@@ -36,20 +35,19 @@ CREATE TABLE IF NOT EXISTS TasasCambio (
   origen TEXT CHECK (origen IN ('BCV', 'Manual'))
 );
 
-CREATE TABLE IF NOT EXISTS Productos (
-  cod_producto TEXT PRIMARY KEY,
-  nombre TEXT,
-  precio REAL,
-  id_categoria INTEGER,
-  Rif TEXT,
-  FOREIGN KEY (id_categoria) REFERENCES categoria_productos(id_categoria),
-  FOREIGN KEY (Rif) REFERENCES Proveedores(Rif)
-);
 
 CREATE TABLE IF NOT EXISTS categoria_productos (
   id_categoria INTEGER PRIMARY KEY AUTOINCREMENT,
   descr TEXT,
   tipo TEXT CHECK (tipo IN ('preparado', 'noPreparado'))
+);
+
+CREATE TABLE IF NOT EXISTS Productos (
+  cod_producto TEXT PRIMARY KEY,
+  nombre TEXT,
+  precio REAL,
+  id_categoria INTEGER,
+  FOREIGN KEY (id_categoria) REFERENCES categoria_productos(id_categoria)
 );
 
 CREATE TABLE IF NOT EXISTS Proveedores (
@@ -79,19 +77,22 @@ CREATE TABLE IF NOT EXISTS Productos_noPreparados (
   cant_actual INTEGER,
   costo_compra REAL,
   unidad_medida TEXT,
-  FOREIGN KEY (cod_producto_noPreparado) REFERENCES Productos(cod_producto)
+  Rif TEXT,
+  FOREIGN KEY (cod_producto_noPreparado) REFERENCES Productos(cod_producto),
+  FOREIGN KEY (Rif) REFERENCES Proveedores(Rif)
 );
 
-CREATE TABLE IF NOT EXISTS Creditos (
-  id_credito INTEGER PRIMARY KEY AUTOINCREMENT,
-  ci_cliente TEXT,
-  fecha_credito DATE,
-  fecha_ultimo_abono DATE,
-  monto_total REAL,
-  monto_pagado REAL,
-  estado TEXT CHECK (estado IN ('Pagado', 'Pendiente', 'Parcial')),
-  FOREIGN KEY (ci_cliente) REFERENCES Clientes(ci_cliente)
-);
+  CREATE TABLE IF NOT EXISTS Creditos (
+    id_credito INTEGER PRIMARY KEY AUTOINCREMENT,
+    ci_cliente TEXT,
+    fecha_credito DATE,
+    fecha_ultimo_abono DATE,
+    fecha_tope_pago DATE,
+    monto_total REAL,
+    monto_pagado REAL,
+    estado TEXT CHECK (estado IN ('Pagado', 'Pendiente', 'Parcial')),
+    FOREIGN KEY (ci_cliente) REFERENCES Clientes(ci_cliente)
+  );
 
 CREATE TABLE IF NOT EXISTS Pagos (
   id_pago INTEGER PRIMARY KEY AUTOINCREMENT,
