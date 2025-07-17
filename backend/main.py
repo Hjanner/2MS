@@ -22,6 +22,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from backend.routes.routes import clientes_router, proveedores_router
+from backend.routes.routes import *
 app.include_router(clientes_router)
 app.include_router(proveedores_router)
+app.include_router(productos_router)
+app.include_router(ventas_router)
+app.include_router(tasasCambio_router)

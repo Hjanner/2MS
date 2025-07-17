@@ -1,5 +1,5 @@
 from fastapi import UploadFile, File
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Dict, Any
 from datetime import date
 
@@ -12,6 +12,35 @@ class Cliente(BaseModel):
     nombre: str = Field(..., description="Nombre completo del cliente")
     tlf: Optional[str] = Field(None, description="Número de teléfono del cliente (opcional)")
     depto_escuela: Optional[str] = Field(None, description="Departamento o escuela del cliente (opcional)")
+
+    @field_validator('ci_cliente')
+    @classmethod 
+    def validate_ci_cliente(cls, v):
+        # Validar que solo contenga números y tenga longitud correcta
+        if not v.isdigit():
+            raise ValueError('La cédula debe contener solo números')
+        if len(v) != 8:
+            raise ValueError('La cédula debe tener exactamente 8 dígitos')
+        return v
+
+    @field_validator('tlf')
+    @classmethod 
+    def validate_tlf(cls, v):
+        if v is not None:
+            if not v.startswith('0'):
+                raise ValueError('El teléfono debe comenzar con 0')
+            if len(v) != 11:
+                raise ValueError('El teléfono debe tener exactamente 11 dígitos')
+            if not v.isdigit():
+                raise ValueError('El teléfono debe contener solo números')
+        return v
+
+    @field_validator('nombre')
+    @classmethod
+    def validate_nombre(cls, v):
+        if any(char.isdigit() for char in v):
+            raise ValueError('El nombre no puede contener números')
+        return v.title()  
 
     def to_dict(self) -> Dict[str, Any]:
         """Convierte la instancia del modelo en un diccionario ('s model_dump)."""

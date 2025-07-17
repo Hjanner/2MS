@@ -1,4 +1,4 @@
-from typing import List, Optional, TypeVar, Generic
+from typing import List, Optional, TypeVar, Generic, Dict, Any
 
 T = TypeVar('T')  # Modelo Pydantic
 
@@ -30,6 +30,14 @@ class BaseController(Generic[T]):
         """
         return self.service.get_by_id(id_field, id_value)
 
+    def get_by_keys(self, keys: Dict[str, Any]) -> Optional[T]:
+        """
+        Obtiene un registro por múltiples campos clave (clave primaria compuesta).
+        :param keys: Diccionario con los campos clave y sus valores.
+        :return: Instancia del modelo o None si no existe.
+        """
+        return self.service.get_by_keys(keys)
+
     def create(self, obj_in: T) -> None:
         """
         Crea un nuevo registro en la entidad.
@@ -47,6 +55,15 @@ class BaseController(Generic[T]):
         """
         return self.service.update(id_field, id_value, obj_in)
 
+    def update_by_keys(self, keys: Dict[str, Any], obj_in: T) -> bool:
+        """
+        Actualiza un registro existente usando múltiples campos clave.
+        :param keys: Diccionario con los campos clave y sus valores.
+        :param obj_in: Instancia del modelo con los nuevos datos.
+        :return: True si se actualizó, False si no existe.
+        """
+        return self.service.update_by_keys(keys, obj_in)
+
     def delete(self, id_field: str, id_value) -> bool:
         """
         Elimina un registro por su campo clave primaria.
@@ -55,3 +72,11 @@ class BaseController(Generic[T]):
         :return: True si se eliminó, False si no existe.
         """
         return self.service.delete(id_field, id_value)
+
+    def delete_by_keys(self, keys: Dict[str, Any]) -> bool:
+        """
+        Elimina un registro usando múltiples campos clave.
+        :param keys: Diccionario con los campos clave y sus valores.
+        :return: True si se eliminó, False si no existe.
+        """
+        return self.service.delete_by_keys(keys)

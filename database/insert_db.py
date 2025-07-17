@@ -5,26 +5,26 @@ from database import db_path
 print("Ruta de la base de datos:", db_path)
 
 def insert_data():
-    conn = None # Initialize conn to None
+    conn = None 
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        # --- Inserts para la tabla Clientes (asegurando que existan para las FK) ---
+# --- Inserts para la tabla Clientes (asegurando que existan para las FK) ---
         clientes_data = [
-            ('V12345678', 'Juan Pérez', '04141234567', 'Ingeniería'),
-            ('V87654321', 'Ana Gómez', '04149876543', 'Administración'),
-            ('V11223344', 'Carlos Ruiz', '04245556677', 'Contabilidad')
+            ('12345678', 'Juan Pérez', '04141234567', 'Ingeniería'),
+            ('87654321', 'Ana Gómez', '04149876543', 'Administración'),
+            ('11223344', 'Carlos Ruiz', '04245556677', 'Contabilidad')
         ]
         cursor.executemany("INSERT OR IGNORE INTO Clientes (ci_cliente, nombre, tlf, depto_escuela) VALUES (?, ?, ?, ?)", clientes_data)
 
-        # --- Inserts para la tabla TasasCambio (asegurando que existan para las FK de Ventas) ---
+# --- Inserts para la tabla TasasCambio (asegurando que existan para las FK de Ventas) ---
         tasas_cambio_data = [
             ('2024-07-15', 36.50, 'BCV')
         ]
         cursor.executemany("INSERT OR IGNORE INTO TasasCambio (fecha, valor_usd_bs, origen) VALUES (?, ?, ?)", tasas_cambio_data)
 
-        # --- Inserts para la tabla Proveedores ---
+# --- Inserts para la tabla Proveedores ---
         proveedores_data = [
             ('J-12345678-9', 'Distribuidora La Granja C.A.', 'Av. Principal, Edif. Granja, Caracas', '0212-1234567', 'Ana Pérez'),
             ('V-98765432-1', 'Suministros del Campo S.A.', 'Calle 5, Centro Empresarial, Valencia', '0241-9876543', 'Luis García'),
@@ -32,7 +32,7 @@ def insert_data():
         ]
         cursor.executemany("INSERT OR IGNORE INTO Proveedores (Rif, razon_social, direccion, tfl, persona_contacto) VALUES (?, ?, ?, ?, ?)", proveedores_data)
 
-        # --- Inserts para la tabla categoria_productos ---
+# --- Inserts para la tabla categoria_productos ---
         categorias_data = [
             ('Juegos de Mesa', 'noPreparado'),
             ('Almuerzos Caseros', 'preparado'),
@@ -43,7 +43,7 @@ def insert_data():
         ]
         cursor.executemany("INSERT OR IGNORE INTO categoria_productos (descr, tipo) VALUES (?, ?)", categorias_data)
 
-        # --- Inserts para la tabla Productos ---
+# --- Inserts para la tabla Productos ---
         productos_data = [
             ('PROD001', 'Monopoly', 35.50, 1),
             ('PROD002', 'Pabellón Criollo', 8.75, 2),
@@ -58,7 +58,7 @@ def insert_data():
         ]
         cursor.executemany("INSERT OR IGNORE INTO Productos (cod_producto, nombre, precio, id_categoria) VALUES (?, ?, ?, ?)", productos_data)
 
-        # --- Inserts para la tabla Productos_preparados ---
+# --- Inserts para la tabla Productos_preparados ---
         productos_preparados_data = [
             ('PROD002', 'Plato típico venezolano con carne mechada, arroz, caraotas y tajadas.'),
             ('PROD003', 'Capas de pasta, carne molida y salsa bechamel.'),
@@ -67,7 +67,7 @@ def insert_data():
         ]
         cursor.executemany("INSERT OR IGNORE INTO Productos_preparados (cod_producto_preparado, descr) VALUES (?, ?)", productos_preparados_data)
 
-        # --- Inserts para la tabla Productos_noPreparados ---
+# --- Inserts para la tabla Productos_noPreparados ---
         productos_no_preparados_data = [
             ('PROD001', 5, 12, 20.00, 'unidad', 'J-12345678-9'),
             ('PROD004', 10, 50, 1.20, 'paquete', 'V-98765432-1'),
@@ -78,7 +78,7 @@ def insert_data():
         ]
         cursor.executemany("INSERT OR IGNORE INTO Productos_noPreparados (cod_producto_noPreparado, cant_min, cant_actual, costo_compra, unidad_medida, Rif) VALUES (?, ?, ?, ?, ?, ?)", productos_no_preparados_data)
 
-        # --- Inserts para la tabla Compras ---
+# --- Inserts para la tabla Compras ---
         compras_data = [
             ('2024-07-01', 'J-12345678-9'),
             ('2024-07-05', 'V-98765432-1'),
@@ -87,7 +87,7 @@ def insert_data():
         ]
         cursor.executemany("INSERT INTO Compras (fecha, Rif) VALUES (?, ?)", compras_data)
 
-        # --- Inserts para la tabla Inventarios (movimientos de entrada por compras) ---
+# --- Inserts para la tabla Inventarios (movimientos de entrada por compras) ---
         inventarios_data = [
             ('PROD001', 'compra', 'Compra inicial de Monopoly', 'entrada', 10, '2024-07-01'),
             ('PROD004', 'compra', 'Compra de galletas', 'entrada', 40, '2024-07-05'),
@@ -98,8 +98,7 @@ def insert_data():
         ]
         cursor.executemany("INSERT INTO Inventarios (cod_producto, referencia, comentario, tipo_movimiento, cant_movida, fc_actualizacion) VALUES (?, ?, ?, ?, ?, ?)", inventarios_data)
 
-        # --- Inserts para la tabla Compra_Inventario ---
-        # Fetch IDs for Compras (assuming they were inserted in order)
+# --- Inserts para la tabla Compra_Inventario ---
         cursor.execute("SELECT id_compra FROM Compras ORDER BY id_compra ASC")
         compra_ids = [row[0] for row in cursor.fetchall()]
 
@@ -118,7 +117,6 @@ def insert_data():
         cursor.executemany("INSERT INTO Compra_Inventario (id_compra, id_inventario, cod_producto, cant_comprada, monto_unitario) VALUES (?, ?, ?, ?, ?)", compra_inventario_data)
 
         # --- Inserts para la tabla Ventas (asociadas a Pagos) ---
-        # These are the sales that will be referenced by the payments and credits
         ventas_data = [
             (100.00, '2024-07-01', 2.74, 'credito', 'V12345678', 1), # Venta 1 (Juan Perez)
             (150.00, '2024-07-03', 4.11, 'credito', 'V87654321', 1), # Venta 2 (Ana Gomez)
@@ -126,7 +124,7 @@ def insert_data():
         ]
         cursor.executemany("INSERT INTO Ventas (monto_total_bs, fecha, monto_total_usd, tipo, ci_cliente, id_tasa) VALUES (?, ?, ?, ?, ?, ?)", ventas_data)
 
-        # --- Inserts para la tabla Creditos ---
+# --- Inserts para la tabla Creditos ---
         creditos_data = [
             # Crédito 1: Pagado completamente
             ('V12345678', '2024-07-01', '2024-07-10', '2024-08-01', 100.00, 100.00, 'Pagado'),
@@ -139,18 +137,15 @@ def insert_data():
         ]
         cursor.executemany("INSERT INTO Creditos (ci_cliente, fecha_credito, fecha_ultimo_abono, fecha_tope_pago, monto_total, monto_pagado, estado) VALUES (?, ?, ?, ?, ?, ?, ?)", creditos_data)
 
-        # --- Inserts para la tabla Pagos ---
+# --- Inserts para la tabla Pagos ---
         # We need to get the IDs from the previously inserted Ventas.
         cursor.execute("SELECT id_venta FROM Ventas ORDER BY id_venta ASC")
         venta_ids = [row[0] for row in cursor.fetchall()]
 
         pagos_data = [
-            # Pago para Crédito 1 (total) - assuming venta_ids[0] corresponds to Venta 1
             (venta_ids[0], 'CORR001', 100.00, '2024-07-10', 'transferencia', 'REF123456', '04141234567'),
-            # Pagos para Crédito 3 (parcial) - assuming venta_ids[2] corresponds to Venta 3
             (venta_ids[2], 'CORR002', 20.00, '2024-07-12', 'pago_movil', 'PM2345678', '04245556677'),
             (venta_ids[2], 'CORR003', 20.00, '2024-07-13', 'efectivo_bs', None, None),
-            # Pago para Crédito 4 (parcial) - assuming venta_ids[0] corresponds to Venta 1 (reused for another credit)
             (venta_ids[0], 'CORR004', 20.00, '2024-06-20', 'debito', 'DEB987654', None)
         ]
         cursor.executemany("INSERT INTO Pagos (id_venta, num_cor, monto, fecha_pago, metodo_pago, referencia, num_tefl) VALUES (?, ?, ?, ?, ?, ?, ?)", pagos_data)
@@ -161,7 +156,7 @@ def insert_data():
     except sqlite3.Error as e:
         print(f"An error occurred: {e}")
         if conn:
-            conn.rollback() # Rollback changes if an error occurs
+            conn.rollback() 
     finally:
         if conn:
             conn.close()

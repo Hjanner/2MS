@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Type, List, Optional, Any
+from typing import Type, List, Optional, Any, Dict
 
 class BaseService:
     """
@@ -48,6 +48,22 @@ class BaseService:
                 return self.model.from_dict(dict(zip([col[0] for col in cursor.description], row)))
             return None
 
+    def get_by_keys(self, keys: Dict[str, Any]) -> Optional[Any]:
+        """
+        Obtiene un registro por múltiples campos clave (clave primaria compuesta).
+        :param keys: Diccionario con los campos clave y sus valores.
+        :return: Instancia del modelo o None si no existe.
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            where_clause = " AND ".join([f"{k} = ?" for k in keys.keys()])
+            values = tuple(keys.values())
+            cursor.execute(f"SELECT * FROM {self.table_name} WHERE {where_clause}", values)
+            row = cursor.fetchone()
+            if row:
+                return self.model.from_dict(dict(zip([col[0] for col in cursor.description], row)))
+            return None
+
     def create(self, obj_in) -> None:
         """
         Inserta un nuevo registro en la tabla.
@@ -85,6 +101,32 @@ class BaseService:
             conn.commit()
             return cursor.rowcount > 0
 
+    def update_by_keys(self, keys: Dict[str, Any], obj_in) -> bool:
+        """
+        Actualiza un registro existente usando múltiples campos clave.
+        :param keys: Diccionario con los campos clave y sus valores.
+        :param obj_in: Instancia del modelo con los nuevos datos.
+        :return: True si se actualizó, False si no existe.
+        """
+        data = obj_in.to_dict()
+        # Excluir los campos clave del update
+        update_fields = [f"{k} = ?" for k in data.keys() if k not in keys]
+        update_values = [v for k, v in data.items() if k not in keys]
+        
+        where_clause = " AND ".join([f"{k} = ?" for k in keys.keys()])
+        where_values = tuple(keys.values())
+        
+        all_values = tuple(update_values) + where_values
+        
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                f"UPDATE {self.table_name} SET {', '.join(update_fields)} WHERE {where_clause}",
+                all_values
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+
     def delete(self, id_field: str, id_value: Any) -> bool:
         """
         Elimina un registro por su campo clave primaria.
@@ -97,6 +139,23 @@ class BaseService:
             cursor.execute(
                 f"DELETE FROM {self.table_name} WHERE {id_field} = ?",
                 (id_value,)
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+
+    def delete_by_keys(self, keys: Dict[str, Any]) -> bool:
+        """
+        Elimina un registro usando múltiples campos clave.
+        :param keys: Diccionario con los campos clave y sus valores.
+        :return: True si se eliminó, False si no existe.
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            where_clause = " AND ".join([f"{k} = ?" for k in keys.keys()])
+            values = tuple(keys.values())
+            cursor.execute(
+                f"DELETE FROM {self.table_name} WHERE {where_clause}",
+                values
             )
             conn.commit()
             return cursor.rowcount > 0 
