@@ -1,39 +1,25 @@
 from pydantic import field_validator
-from typing import Optional
+from .common import *
 
 class ClienteValidators:
-    """Mixin con validaciones específicas para clientes"""
-    
     @field_validator('ci_cliente')
     @classmethod
     def validate_ci_cliente(cls, v):
-        """Valida formato de cédula venezolana"""
-        if not v.isdigit():
-            raise ValueError('La cédula debe contener solo números')
-        if len(v) > 10:
-            raise ValueError('La cédula supera los 10 dígitos')
-        return v
+        v = validate_only_digits(v, "Cédula")
+        return validate_max_length(v, 10, "Cédula")
 
     @field_validator('tlf')
     @classmethod
     def validate_tlf(cls, v):
-        """Valida formato de teléfono venezolano"""
         if v is not None:
-            if not v.startswith('0'):
-                raise ValueError('El teléfono debe comenzar con 0')
-            if len(v) != 11:
-                raise ValueError('El teléfono debe tener exactamente 11 dígitos')
-            if not v.isdigit():
-                raise ValueError('El teléfono debe contener solo números')
+            return validate_phone(v, "Teléfono")
         return v
 
     @field_validator('nombre')
     @classmethod
     def validate_nombre(cls, v):
-        """Valida formato de nombre"""
-        if any(char.isdigit() for char in v):
-            raise ValueError('El nombre no puede contener números')
-        return v.title()  # Capitalizar nombre
+        return validate_name(v, "Nombre")
+
 
 class ProveedorValidators:
     """Mixin con validaciones específicas para proveedores"""
@@ -41,20 +27,13 @@ class ProveedorValidators:
     @field_validator('Rif')
     @classmethod
     def validate_rif(cls, v):
-        """Valida formato de RIF venezolano"""
-        if not v.startswith(('V', 'E', 'J', 'P', 'G')):
-            raise ValueError('El RIF debe comenzar con V, E, J, P o G')
-        if len(v) < 9:
-            raise ValueError('El RIF debe tener al menos 9 caracteres')
-        return v.upper()
+        return validate_rif(v)
 
     @field_validator('tfl')
     @classmethod
     def validate_tfl(cls, v):
-        """Valida formato de teléfono de proveedor"""
         if v is not None:
-            if not v.startswith(('0', '+58')):
-                raise ValueError('El teléfono debe comenzar con 0 o +58')
+            v = validate_starts_with(v, ['0', '+58'], "Teléfono")
             if len(v) < 10:
                 raise ValueError('El teléfono debe tener al menos 10 dígitos')
         return v
@@ -65,18 +44,13 @@ class ProductoValidators:
     @field_validator('cod_producto')
     @classmethod
     def validate_cod_producto(cls, v):
-        """Valida formato de código de producto"""
-        if len(v) < 1:
-            raise ValueError('El código de producto debe tener al menos 1 caracteres')
+        v = validate_not_empty(v, "Código de producto")
         return v.upper()
 
     @field_validator('precio')
     @classmethod
     def validate_precio(cls, v):
-        """Valida que el precio sea positivo"""
-        if v <= 0:
-            raise ValueError('El precio debe ser mayor a 0')
-        return v
+        return validate_positive_number(v, "Precio")
 
 class VentaValidators:
     """Mixin con validaciones específicas para ventas"""
@@ -84,15 +58,98 @@ class VentaValidators:
     @field_validator('tipo')
     @classmethod
     def validate_tipo(cls, v):
-        """Valida tipo de venta"""
-        if v not in ['credito', 'de_contado']:
-            raise ValueError('El tipo debe ser "credito" o "de_contado"')
-        return v
+        return validate_enum(v, ['credito', 'de_contado'], "Tipo de venta")
 
     @field_validator('monto_total_bs')
     @classmethod
     def validate_monto(cls, v):
-        """Valida que el monto sea positivo"""
-        if v <= 0:
-            raise ValueError('El monto debe ser mayor a 0')
-        return v
+        return validate_positive_number(v, "Monto total (Bs)")
+    
+class TasaCambioValidators:
+    @field_validator('valor_usd_bs')
+    @classmethod
+    def validate_valor_usd_bs(cls, v):
+        return validate_positive_number(v, "Tasa")
+
+    @field_validator('origen')
+    @classmethod
+    def validate_origen(cls, v):
+        return validate_enum(v, ['BCV', 'Manual'], "Origen")
+
+class CategoriaProductoValidators:
+    @field_validator('tipo')
+    @classmethod
+    def validate_tipo(cls, v):
+        return validate_enum(v, ['preparado', 'noPreparado'], "Tipo")
+
+
+class ProductoPreparadoValidators:
+    @field_validator('descr')
+    @classmethod
+    def validate_descr(cls, v):
+        v = validate_not_empty(v, "Descripción")
+        return v.title()
+
+
+class ProductoNoPreparadoValidators:
+    @field_validator('cant_min', 'cant_actual', 'costo_compra')
+    @classmethod
+    def validate_numericos(cls, v, field):
+        return validate_non_negative_number(v, field.name)
+
+    @field_validator('unidad_medida')
+    @classmethod
+    def validate_unidad(cls, v):
+        v = validate_not_empty(v, "Unidad de medida")
+        return v.lower()
+
+
+class PagoValidators:
+    @field_validator('metodo_pago')
+    @classmethod
+    def validate_metodo(cls, v):
+        metodos_validos = [
+            'efectivo_bs', 'efectvo_usd',
+            'pago_movil', 'debito', 'transferencia'
+        ]
+        return validate_enum(v, metodos_validos, "Método de pago")
+
+    @field_validator('monto')
+    @classmethod
+    def validate_monto(cls, v):
+        return validate_positive_number(v, "Monto")
+
+
+class InventarioValidators:
+    @field_validator('referencia')
+    @classmethod
+    def validate_referencia(cls, v):
+        referencias_validas = [
+            'compra', 'venta', 'descarte', 'ajuste',
+            'traslado_tienda', 'autoconsumo'
+        ]
+        return validate_enum(v, referencias_validas, "Referencia")
+
+    @field_validator('tipo_movimiento')
+    @classmethod
+    def validate_tipo_mov(cls, v):
+        return validate_enum(v, ['entrada', 'salida'], "Tipo de movimiento")
+
+    @field_validator('cant_movida')
+    @classmethod
+    def validate_cant(cls, v):
+        return validate_positive_number(v, "Cantidad movida")
+
+
+class DetalleVentaValidators:
+    @field_validator('cantidad_producto', 'precio_unitario')
+    @classmethod
+    def validate_detalle(cls, v, field):
+        return validate_positive_number(v, field.name)
+
+
+class CompraInventarioValidators:
+    @field_validator('cant_comprada', 'monto_unitario')
+    @classmethod
+    def validate_compra(cls, v, field):
+        return validate_positive_number(v, field.name)
