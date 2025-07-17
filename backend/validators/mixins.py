@@ -20,7 +20,6 @@ class ClienteValidators:
     def validate_nombre(cls, v):
         return validate_name(v, "Nombre")
 
-
 class ProveedorValidators:
     """Mixin con validaciones específicas para proveedores"""
     
@@ -82,14 +81,12 @@ class CategoriaProductoValidators:
     def validate_tipo(cls, v):
         return validate_enum(v, ['preparado', 'noPreparado'], "Tipo")
 
-
 class ProductoPreparadoValidators:
     @field_validator('descr')
     @classmethod
     def validate_descr(cls, v):
         v = validate_not_empty(v, "Descripción")
         return v.title()
-
 
 class ProductoNoPreparadoValidators:
     @field_validator('cant_min', 'cant_actual', 'costo_compra')
@@ -102,7 +99,6 @@ class ProductoNoPreparadoValidators:
     def validate_unidad(cls, v):
         v = validate_not_empty(v, "Unidad de medida")
         return v.lower()
-
 
 class PagoValidators:
     @field_validator('metodo_pago')
@@ -118,7 +114,6 @@ class PagoValidators:
     @classmethod
     def validate_monto(cls, v):
         return validate_positive_number(v, "Monto")
-
 
 class InventarioValidators:
     @field_validator('referencia')
@@ -140,13 +135,11 @@ class InventarioValidators:
     def validate_cant(cls, v):
         return validate_positive_number(v, "Cantidad movida")
 
-
 class DetalleVentaValidators:
     @field_validator('cantidad_producto', 'precio_unitario')
     @classmethod
     def validate_detalle(cls, v, field):
         return validate_positive_number(v, field.name)
-
 
 class CompraInventarioValidators:
     @field_validator('cant_comprada', 'monto_unitario')

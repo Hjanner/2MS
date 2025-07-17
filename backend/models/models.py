@@ -25,7 +25,7 @@ class Cliente(BaseModel, ClienteValidators):
     def __repr__(self) -> str:
         return f"Cliente(CI: {self.ci_cliente}, Nombre: {self.nombre})"
 
-class TasaCambio(BaseModel):
+class TasaCambio(BaseModel, TasaCambioValidators):
     """
     Modelo para la tabla 'TasasCambio' .
     Registra las tasas de cambio de USD a BS en una fecha específica y su origen.
@@ -128,12 +128,13 @@ class Producto(BaseModel, ProductoValidators):
     def __repr__(self) -> str:
         return f"Producto(Código: {self.cod_producto}, Nombre: {self.nombre}, Precio: {self.precio})"
 
-class ProductoPreparado(BaseModel):
+class ProductoPreparado(BaseModel, ProductoPreparadoValidators):
     """
     Modelo para la tabla 'Productos_preparados' .
     Extiende la información de un producto si es preparado.
     """
     cod_producto_preparado: str = Field(..., description="Código del producto preparado (clave primaria y foránea)")
+    descr: str = Field(..., description="Descripcion del producto preparado.")
 
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump()
@@ -145,7 +146,7 @@ class ProductoPreparado(BaseModel):
     def __repr__(self) -> str:
         return f"ProductoPreparado(Código: {self.cod_producto_preparado})"
 
-class ProductoNoPreparado(BaseModel):
+class ProductoNoPreparado(BaseModel, ProductoNoPreparadoValidators):
     """
     Modelo para la tabla 'Productos_noPreparados' .
     Extiende la información de un producto si no es preparado (inventariable).
@@ -209,7 +210,7 @@ class Credito(BaseModel):
     def __repr__(self) -> str:
         return f"Credito(ID: {self.id_credito}, Cliente CI: {self.ci_cliente}, Estado: {self.estado})"
 
-class Pago(BaseModel):
+class Pago(BaseModel, PagoValidators):
     """
     Modelo para la tabla 'Pagos' .
     Registra los pagos asociados a una venta.
@@ -233,7 +234,7 @@ class Pago(BaseModel):
     def __repr__(self) -> str:
         return f"Pago(ID: {self.id_pago}, Venta ID: {self.id_venta}, Monto: {self.monto}, Método: {self.metodo_pago})"
 
-class Inventario(BaseModel):
+class Inventario(BaseModel, InventarioValidators):
     """
     Modelo para la tabla 'Inventarios' .
     Registra los movimientos de inventario de un producto.
@@ -256,7 +257,7 @@ class Inventario(BaseModel):
     def __repr__(self) -> str:
         return f"Inventario(ID: {self.id_inventario}, Producto: {self.cod_producto}, Tipo: {self.tipo_movimiento}, Cant: {self.cant_movida})"
 
-class DetalleVenta(BaseModel):
+class DetalleVenta(BaseModel, DetalleVentaValidators):
     """
     Modelo para la tabla 'Detalle_Venta' .
     Detalle de los productos incluidos en una venta.
@@ -277,7 +278,7 @@ class DetalleVenta(BaseModel):
     def __repr__(self) -> str:
         return f"DetalleVenta(ID: {self.id_detalle}, Venta ID: {self.id_venta}, Producto: {self.id_producto}, Cant: {self.cantidad_producto})"
 
-class CompraInventario(BaseModel):
+class CompraInventario(BaseModel, CompraInventarioValidators):
     """
     Modelo para la tabla 'Compra_Inventario' .
     Tabla de unión para registrar qué productos se compraron en una compra y cómo afectaron el inventario.

@@ -16,7 +16,7 @@
         "description": "Operaciones con Productos"
     },
     {
-        "name": "categoria_productos",
+        "name": "Categoria_productos",
         "description": "Operaciones con Categorías de Productos"
     },
     {
