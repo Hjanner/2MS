@@ -1,9 +1,9 @@
-from fastapi import UploadFile, File
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
 from datetime import date
+from backend.validators.mixins import *
 
-class Cliente(BaseModel):
+class Cliente(BaseModel, ClienteValidators):
     """
     Modelo para la tabla 'Clientes' .
     Representa a un cliente con su información personal.
@@ -12,35 +12,6 @@ class Cliente(BaseModel):
     nombre: str = Field(..., description="Nombre completo del cliente")
     tlf: Optional[str] = Field(None, description="Número de teléfono del cliente (opcional)")
     depto_escuela: Optional[str] = Field(None, description="Departamento o escuela del cliente (opcional)")
-
-    @field_validator('ci_cliente')
-    @classmethod 
-    def validate_ci_cliente(cls, v):
-        # Validar que solo contenga números y tenga longitud correcta
-        if not v.isdigit():
-            raise ValueError('La cédula debe contener solo números')
-        if len(v) != 8:
-            raise ValueError('La cédula debe tener exactamente 8 dígitos')
-        return v
-
-    @field_validator('tlf')
-    @classmethod 
-    def validate_tlf(cls, v):
-        if v is not None:
-            if not v.startswith('0'):
-                raise ValueError('El teléfono debe comenzar con 0')
-            if len(v) != 11:
-                raise ValueError('El teléfono debe tener exactamente 11 dígitos')
-            if not v.isdigit():
-                raise ValueError('El teléfono debe contener solo números')
-        return v
-
-    @field_validator('nombre')
-    @classmethod
-    def validate_nombre(cls, v):
-        if any(char.isdigit() for char in v):
-            raise ValueError('El nombre no puede contener números')
-        return v.title()  
 
     def to_dict(self) -> Dict[str, Any]:
         """Convierte la instancia del modelo en un diccionario ('s model_dump)."""
@@ -74,14 +45,13 @@ class TasaCambio(BaseModel):
     def __repr__(self) -> str:
         return f"TasaCambio(ID: {self.id_tasa}, Fecha: {self.fecha}, Valor: {self.valor_usd_bs})"
 
-class Venta(BaseModel):
+class Venta(BaseModel, VentaValidators):
     """
     Modelo para la tabla 'Ventas' .
     Registra cada transacción de venta.
     """
     id_venta: Optional[int] = Field(None, description="ID único de la venta (AUTOINCREMENT)")
     monto_total_bs: float = Field(..., description="Monto total de la venta en Bolívares")
-    iva: float = Field(..., description="Monto del IVA aplicado")
     fecha: date = Field(..., description="Fecha de la venta")
     monto_total_usd: float = Field(..., description="Monto total de la venta en Dólares")
     tipo: str = Field(..., description="Tipo de venta ('credito' o 'de_contado')")
@@ -117,7 +87,7 @@ class CategoriaProducto(BaseModel):
     def __repr__(self) -> str:
         return f"CategoriaProducto(ID: {self.id_categoria}, Descripción: {self.descr}, Tipo: {self.tipo})"
 
-class Proveedor(BaseModel):
+class Proveedor(BaseModel, ProveedorValidators):
     """
     Modelo para la tabla 'Proveedores' .
     Almacena la información de los proveedores.
@@ -138,7 +108,7 @@ class Proveedor(BaseModel):
     def __repr__(self) -> str:
         return f"Proveedor(Rif: {self.Rif}, Razón Social: {self.razon_social})"
 
-class Producto(BaseModel):
+class Producto(BaseModel, ProductoValidators):
     """
     Modelo para la tabla 'Productos' .
     Información general de un producto.
@@ -147,7 +117,6 @@ class Producto(BaseModel):
     nombre: str = Field(..., description="Nombre del producto")
     precio: float = Field(..., description="Precio del producto")
     id_categoria: Optional[int] = Field(None, description="ID de la categoría del producto (clave foránea)")
-    Rif: Optional[str] = Field(None, description="RIF del proveedor asociado al producto (clave foránea)")
 
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump()
@@ -186,6 +155,7 @@ class ProductoNoPreparado(BaseModel):
     cant_actual: int = Field(..., description="Cantidad actual en inventario")
     costo_compra: float = Field(..., description="Costo de compra unitario del producto")
     unidad_medida: str = Field(..., description="Unidad de medida del producto (ej. 'kg', 'unidad')")
+    Rif: Optional[str] = Field(None, description="RIF del proveedor asociado al producto (clave foránea)")
 
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump()
