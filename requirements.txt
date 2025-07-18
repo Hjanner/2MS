@@ -4,3 +4,5 @@ python-dotenv
 bcrypt
 python-multipart
 httpx
+apscheduler
+pytz

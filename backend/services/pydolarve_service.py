@@ -15,7 +15,6 @@ class PyDolarVE:
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{self.BASE_URL}/{endpoint}", params=params)
             response.raise_for_status()
-            # print(response.json())
             return response.json()
 
     async def get_precio_dolar(self): 
