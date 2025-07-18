@@ -1,8 +1,7 @@
 import json
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-# from routes import items
 from fastapi.middleware.cors import CORSMiddleware
+from backend.routes.pydolarve_routers import api_utils_router
 
 with open("tags_metadata.json") as f:
     tags_metadata = json.load(f)
@@ -37,3 +36,4 @@ app.include_router(detalle_venta_router)
 app.include_router(compra_inventario_router)
 app.include_router(productos_preparados_router)
 app.include_router(productos_noPreparados_router)
+app.include_router(api_utils_router)

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
-from datetime import date
+from datetime import date, datetime
 from backend.validators.mixins import *
 
 class Cliente(BaseModel, ClienteValidators):
@@ -31,7 +31,7 @@ class TasaCambio(BaseModel, TasaCambioValidators):
     Registra las tasas de cambio de USD a BS en una fecha específica y su origen.
     """
     id_tasa: Optional[int] = Field(None, description="ID único de la tasa de cambio (AUTOINCREMENT)")
-    fecha: date = Field(..., description="Fecha de la tasa de cambio")
+    fecha: datetime = Field(..., description="Fecha y hora de la tasa de cambio")
     valor_usd_bs: float = Field(..., description="Valor de 1 USD en Bolívares")
     origen: str = Field(..., description="Origen de la tasa ('BCV' o 'Manual')")
 

@@ -38,12 +38,12 @@ class BaseController(Generic[T]):
         """
         return self.service.get_by_keys(keys)
 
-    def create(self, obj_in: T) -> None:
+    def create(self, obj_in: T) -> Any:
         """
         Crea un nuevo registro en la entidad.
         :param obj_in: Instancia del modelo a crear.
         """
-        self.service.create(obj_in)
+        return self.service.create(obj_in)
 
     def update(self, id_field: str, id_value, obj_in: T) -> bool:
         """
@@ -80,3 +80,4 @@ class BaseController(Generic[T]):
         :return: True si se eliminó, False si no existe.
         """
         return self.service.delete_by_keys(keys)
+    

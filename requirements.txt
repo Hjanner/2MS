@@ -3,4 +3,4 @@ uvicorn
 python-dotenv
 bcrypt
 python-multipart
-sqlite3
+httpx

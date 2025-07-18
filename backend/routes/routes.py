@@ -3,6 +3,7 @@
 from backend.models.models import *
 from backend.controllers.controller import *
 from .crud_factory import create_crud_router
+from backend.services.pydolarve_service import PyDolarVE
 
 # Creación de routers CRUD genéricos para cada entidad
 clientes_router = create_crud_router("clientes", clientes_controller, "ci_cliente", Cliente)
@@ -19,3 +20,5 @@ detalle_venta_router = create_crud_router("detalle_venta", detalle_venta_control
 compra_inventario_router = create_crud_router("compra_inventario", compra_inventario_controller, ["id_compra", "id_inventario", "cod_producto"], CompraInventario)
 productos_preparados_router = create_crud_router("productos_preparados", productos_preparados_controller, "cod_producto_preparado", ProductoPreparado)
 productos_noPreparados_router = create_crud_router("productos_noPreparados", productos_noPreparados_controller, "cod_producto_noPreparado", ProductoNoPreparado)
+
+    

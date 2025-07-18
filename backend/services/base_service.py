@@ -64,7 +64,7 @@ class BaseService:
                 return self.model.from_dict(dict(zip([col[0] for col in cursor.description], row)))
             return None
 
-    def create(self, obj_in) -> None:
+    def create(self, obj_in) -> Any:
         """
         Inserta un nuevo registro en la tabla.
         :param obj_in: Instancia del modelo a insertar.
@@ -80,6 +80,7 @@ class BaseService:
                 values
             )
             conn.commit()
+        return data
 
     def update(self, id_field: str, id_value: Any, obj_in) -> bool:
         """
