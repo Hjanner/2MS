@@ -1,3 +1,4 @@
+#script para guardar la tasa de cambio sino se esta ejecutando el backend 
 import asyncio
 from backend.services.pydolarve_service import PyDolarVE
 from backend.controllers.controller import tasasCambio_controller

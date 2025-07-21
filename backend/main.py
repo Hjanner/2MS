@@ -3,14 +3,29 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.routes.pydolarve_routers import api_utils_router
 
+import backend.utilities.apscheduler as scheduler_config
+from contextlib import asynccontextmanager
+
+
 with open("tags_metadata.json") as f:
     tags_metadata = json.load(f)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if not scheduler_config.scheduler.running:
+        scheduler_config.scheduler.start()
+        print("Scheduler iniciado exitosamente.")
+    yield
+    if scheduler_config.scheduler.running:
+        scheduler_config.scheduler.shutdown()
+        print("Scheduler apagado.")
 
 app = FastAPI(
     title="2MS API", 
     description="API for Morela's Cafe",
     version="0.1",
-    openapi_tags=tags_metadata
+    openapi_tags=tags_metadata,
+    lifespan=lifespan
 )
 
 app.add_middleware(
@@ -20,6 +35,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 from backend.routes.routes import *
 app.include_router(clientes_router)

@@ -20,5 +20,3 @@ detalle_venta_router = create_crud_router("detalle_venta", detalle_venta_control
 compra_inventario_router = create_crud_router("compra_inventario", compra_inventario_controller, ["id_compra", "id_inventario", "cod_producto"], CompraInventario)
 productos_preparados_router = create_crud_router("productos_preparados", productos_preparados_controller, "cod_producto_preparado", ProductoPreparado)
 productos_noPreparados_router = create_crud_router("productos_noPreparados", productos_noPreparados_controller, "cod_producto_noPreparado", ProductoNoPreparado)
-
-    
