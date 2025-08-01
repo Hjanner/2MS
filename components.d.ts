@@ -13,6 +13,8 @@ declare module 'vue' {
     CardSkeleton: typeof import('./src/components/CardSkeleton.vue')['default']
     Cart: typeof import('./src/components/Cart.vue')['default']
     CartItem: typeof import('./src/components/CartItem.vue')['default']
+    ClientList: typeof import('./src/components/ClientList.vue')['default']
+    Example: typeof import('./src/components/example.vue')['default']
     Receipt: typeof import('./src/components/Receipt.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

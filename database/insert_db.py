@@ -118,22 +118,22 @@ def insert_data():
 
         # --- Inserts para la tabla Ventas (asociadas a Pagos) ---
         ventas_data = [
-            (100.00, '2024-07-01', 2.74, 'credito', 'V12345678', 1), # Venta 1 (Juan Perez)
-            (150.00, '2024-07-03', 4.11, 'credito', 'V87654321', 1), # Venta 2 (Ana Gomez)
-            (75.00, '2024-07-05', 2.05, 'credito', 'V11223344', 1)  # Venta 3 (Carlos Ruiz)
+            (100.00, '2024-07-01', 2.74, 'credito', '12345678', 1), # Venta 1 (Juan Perez)
+            (150.00, '2024-07-03', 4.11, 'credito', '87654321', 1), # Venta 2 (Ana Gomez)
+            (75.00, '2024-07-05', 2.05, 'credito', '11223344', 1)  # Venta 3 (Carlos Ruiz)
         ]
         cursor.executemany("INSERT INTO Ventas (monto_total_bs, fecha, monto_total_usd, tipo, ci_cliente, id_tasa) VALUES (?, ?, ?, ?, ?, ?)", ventas_data)
 
 # --- Inserts para la tabla Creditos ---
         creditos_data = [
             # Crédito 1: Pagado completamente
-            ('V12345678', '2024-07-01', '2024-07-10', '2024-08-01', 100.00, 100.00, 'Pagado'),
+            ('12345678', '2024-07-01', '2024-07-10', '2024-08-01', 100.00, 100.00, 'Pagado'),
             # Crédito 2: Pendiente (sin abonos, fecha de pago futura)
-            ('V87654321', '2024-07-03', None, '2024-08-03', 150.00, 0.00, 'Pendiente'),
+            ('87654321', '2024-07-03', None, '2024-08-03', 150.00, 0.00, 'Pendiente'),
             # Crédito 3: Parcial (abonado parcialmente)
-            ('V11223344', '2024-07-05', '2024-07-12', '2024-08-05', 75.00, 40.00, 'Parcial'),
+            ('11223344', '2024-07-05', '2024-07-12', '2024-08-05', 75.00, 40.00, 'Parcial'),
             # Crédito 4: Otro crédito pendiente, pero ya con fecha de pago pasada (podría ser para un reporte de mora)
-            ('V12345678', '2024-06-15', '2024-06-20', '2024-07-01', 50.00, 20.00, 'Parcial')
+            ('12345678', '2024-06-15', '2024-06-20', '2024-07-01', 50.00, 20.00, 'Parcial')
         ]
         cursor.executemany("INSERT INTO Creditos (ci_cliente, fecha_credito, fecha_ultimo_abono, fecha_tope_pago, monto_total, monto_pagado, estado) VALUES (?, ?, ?, ?, ?, ?, ?)", creditos_data)
 

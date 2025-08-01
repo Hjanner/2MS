@@ -19,10 +19,15 @@ Instala las dependencias:
 
 pip install -r requirements.txt
 
+# crear y llenar base de datos, con datos beta
+python database/create_db.py
+
+python database/insert_db.py
+
 # Ejecución
 Inicia el servidor FastAPI:
 
-uvicorn main:app --reload
+uvicorn backend.main:app --reload
 Accede a la aplicación en tu navegador:
 
 Frontend ReactPy: http://127.0.0.1:8000
