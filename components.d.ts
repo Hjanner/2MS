@@ -8,13 +8,17 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BacktoHome: typeof import('./src/components/BacktoHome.vue')['default']
     Card: typeof import('./src/components/Card.vue')['default']
     CardGrid: typeof import('./src/components/CardGrid.vue')['default']
     CardSkeleton: typeof import('./src/components/CardSkeleton.vue')['default']
     Cart: typeof import('./src/components/Cart.vue')['default']
     CartItem: typeof import('./src/components/CartItem.vue')['default']
-    ClientList: typeof import('./src/components/ClientList.vue')['default']
+    ClientDelete: typeof import('./src/components/client/ClientDelete.vue')['default']
+    ClientForm: typeof import('./src/components/client/ClientForm.vue')['default']
+    ClientList: typeof import('./src/components/client/ClientList.vue')['default']
     Example: typeof import('./src/components/example.vue')['default']
+    ProductForm: typeof import('./src/components/product/ProductForm.vue')['default']
     Receipt: typeof import('./src/components/Receipt.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
