@@ -4,10 +4,12 @@ import { useSnackbar } from '@/composables/useSnackbar';
 import ClientList from '@/components/client/ClientList.vue';
 import ClientForm from '@/components/client/ClientForm.vue';
 import ClientDelete from '@/components/client/ClientDelete.vue';
+import SearchFilter from '@/components/common/SearchFilter.vue'; 
 import BacktoHome from '@/components/BacktoHome.vue';
 import api from '@/api/api';
 
 const clientes = ref([]);
+const filteredClientes = ref([]);
 const loading = ref(false);
 const addingClient = ref(false);
 const editingClient = ref(false);
@@ -16,8 +18,9 @@ const showAddDialog = ref(false);
 const showEditDialog = ref(false);
 const showDeleteDialog = ref(false);
 const currentClient = ref(null);
-
 const { showSnackbar } = useSnackbar();
+const addClientErrors = ref({});
+const editClientErrors = ref({});
 
 async function fetchClientes() {
   loading.value = true;
@@ -31,8 +34,6 @@ async function fetchClientes() {
     loading.value = false;
   }
 }
-
-const addClientErrors = ref({});
 
 async function handleAddClient(clientData) {
   addingClient.value = true;
@@ -81,8 +82,6 @@ async function handleAddClient(clientData) {
     addingClient.value = false;
   }
 }
-
-const editClientErrors = ref({});
 
 async function handlerEditClient(clientData) {
   editingClient.value = true;
@@ -140,6 +139,18 @@ function handleDeleteClick(cliente) {
   showDeleteDialog.value = true;
 }
 
+
+// Manejar los datos filtrados del componente de búsqueda
+function handleFilteredData(filtered) {
+  filteredClientes.value = filtered;
+}
+
+// Opcional: manejar eventos de búsqueda para analytics o logs
+function handleSearch(searchData) {
+  console.log('Búsqueda realizada:', searchData);
+  // Aquí puedes agregar lógica adicional como analytics
+}
+
 onMounted(() => {
   fetchClientes();
 });
@@ -165,13 +176,25 @@ onMounted(() => {
             </v-card-title>
             
             <v-card-text>
-              <client-list 
-                :clientes="clientes" 
-                :loading="loading"
-                @refresh="fetchClientes"
-                @edit="handleEditClick"
-                @delete="handleDeleteClick"
-              />
+                <!-- Componente de búsqueda -->
+                <SearchFilter
+                  :data="clientes"
+                  :search-fields="['ci_cliente', 'nombre', 'tlf', 'depto_escuela']"
+                  placeholder="Buscar clientes por nombre, CI, teléfono o departamento..."
+                  :show-field-filter="true"
+                  result-text="clientes"
+                  @filtered="handleFilteredData"
+                  @search="handleSearch"
+                />
+
+                <client-list 
+                  :clientes="filteredClientes" 
+                  :loading="loading"
+                  @refresh="fetchClientes"
+                  @edit="handleEditClick"
+                  @delete="handleDeleteClick"
+                />
+
             </v-card-text>
           </v-card>
         </v-col>

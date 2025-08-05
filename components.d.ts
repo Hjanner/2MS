@@ -24,6 +24,7 @@ declare module 'vue' {
     Receipt: typeof import('./src/components/Receipt.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SearchFilter: typeof import('./src/components/common/SearchFilter.vue')['default']
     Sidebar: typeof import('./src/components/Sidebar.vue')['default']
     Skeleton: typeof import('./src/components/Skeleton.vue')['default']
     SkeletonGrid: typeof import('./src/components/SkeletonGrid.vue')['default']
