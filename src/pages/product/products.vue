@@ -4,7 +4,7 @@ import { useSnackbar } from '@/composables/useSnackbar';
 import ProductList from '@/components/product/ProductList.vue';
 import ProductForm from '@/components/product/ProductForm.vue';
 import SearchFilter from '@/components/common/SearchFilter.vue'; 
-import BacktoHome from '@/components/BacktoHome.vue';
+import BacktoHome from '@/components/common/BacktoHome.vue';
 import api from '@/api/api';
 
 const productos = ref([]);

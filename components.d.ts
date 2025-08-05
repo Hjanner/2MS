@@ -8,7 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    BacktoHome: typeof import('./src/components/BacktoHome.vue')['default']
+    BacktoHome: typeof import('./src/components/common/BacktoHome.vue')['default']
     Card: typeof import('./src/components/Card.vue')['default']
     CardGrid: typeof import('./src/components/CardGrid.vue')['default']
     CardSkeleton: typeof import('./src/components/CardSkeleton.vue')['default']

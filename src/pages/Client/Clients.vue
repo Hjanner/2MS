@@ -5,7 +5,7 @@ import ClientList from '@/components/client/ClientList.vue';
 import ClientForm from '@/components/client/ClientForm.vue';
 import ClientDelete from '@/components/client/ClientDelete.vue';
 import SearchFilter from '@/components/common/SearchFilter.vue'; 
-import BacktoHome from '@/components/BacktoHome.vue';
+import BacktoHome from '@/components/common/BacktoHome.vue';
 import api from '@/api/api';
 
 const clientes = ref([]);
