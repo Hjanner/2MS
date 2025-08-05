@@ -1,7 +1,9 @@
 <script setup>
   import { inject } from 'vue'
 
-  defineProps(['item'])
+  const { item } = defineProps({
+    item: Object,
+  })
 
   const cartActions = inject('cartActions')
 </script>

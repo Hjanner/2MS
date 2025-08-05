@@ -1,5 +1,7 @@
 <script setup>
-  defineProps(['items'])
+  const { items } = defineProps({
+    items: Array,
+  })
 </script>
 
 <template>

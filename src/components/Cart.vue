@@ -1,7 +1,9 @@
 <script setup>
   import { inject } from 'vue'
 
-  defineProps(['selectedItems'])
+  const { selectedItems } = defineProps({
+    selectedItems: Array,
+  })
 
   const cartActions = inject('cartActions')
 </script>
@@ -16,11 +18,15 @@
         v-for="(selectedItem, key) in selectedItems"
         :key
         lines="two"
-        :title="selectedItem.name"
       >
         <template #subtitle>
-          <span>Bs. {{ (5 * selectedItem.quantity).toFixed(2) }}</span>
+          Bs. {{ (5 * cartActions.getItemQuantity(selectedItem.id)).toFixed(2) }}
         </template>
+
+        <template #title>
+          {{ selectedItem.name }}
+        </template>
+
         <template #prepend>
           <v-icon
             class="cursor-pointer"
@@ -28,15 +34,15 @@
             @click="cartActions.removeItem(selectedItem.id)"
           />
         </template>
+
         <template #append>
           <v-number-input
-            v-model="selectedItem.quantity"
+            v-model="cartActions.createItemQuantityModel(selectedItem.id).value"
             control-variant="stacked"
             density="compact"
             :min="1"
             variant="outlined"
             width="80"
-            @update="newValue => cartActions.updateQuantity(selectedItem.id, newValue)"
           />
         </template>
       </v-list-item>
