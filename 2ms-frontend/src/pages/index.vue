@@ -1,0 +1,48 @@
+<script setup>
+  import { computed, provide } from 'vue'
+  import { useCart } from '@/composables/useCart.js'
+  import { useFetch } from '@/composables/useFetch.js'
+
+  const { data, error } = useFetch('https://boringapi.com/api/v1/photos/random?num=10')
+  const items = computed(() => data.value?.photos || [])
+
+  const {
+    getCart,
+    addItem,
+    removeItem,
+    getItemQuantity,
+    setItemQuantity,
+    createItemQuantityModel,
+  } = useCart()
+
+  provide('cartActions', {
+    getCart,
+    addItem,
+    removeItem,
+    getItemQuantity,
+    setItemQuantity,
+    createItemQuantityModel,
+  })
+
+  const selectedItems = computed(() =>
+    items.value
+      .filter(i => i.id in getCart())
+      .map(i => ({ id: i.id, name: i.title })),
+  )
+</script>
+
+<template>
+  <template v-if="error">
+    Error
+  </template>
+
+  <template v-else-if="items.length > 0">
+    <CardGrid :items />
+  </template>
+
+  <template v-else>
+    <SkeletonGrid />
+  </template>
+
+  <Cart :selected-items="selectedItems" />
+</template>
