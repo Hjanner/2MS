@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useSnackbar } from '@/composables/useSnackbar';
 import ClientList from '@/components/client/ClientList.vue';
 import ClientForm from '@/components/client/ClientForm.vue';
 import ClientDelete from '@/components/client/ClientDelete.vue';
@@ -16,40 +17,98 @@ const showEditDialog = ref(false);
 const showDeleteDialog = ref(false);
 const currentClient = ref(null);
 
+const { showSnackbar } = useSnackbar();
+
 async function fetchClientes() {
   loading.value = true;
   try {
     const response = await api.get('/clientes');
     clientes.value = response.data;
   } catch (error) {
-    console.error('Error fetching clients:', error);
-  } finally {
+    const message = error.response?.data?.message || 'Error al cargar los clientes';
+    showSnackbar(message, 'error');
+  } finally { 
     loading.value = false;
   }
 }
 
+const addClientErrors = ref({});
+
 async function handleAddClient(clientData) {
   addingClient.value = true;
+  addClientErrors.value = {};
+  
   try {
     await api.post('/clientes', clientData);
     await fetchClientes();
     showAddDialog.value = false;
-  } catch (error) {
-    console.error('Error adding client:', error);
+    showSnackbar('Cliente agregado correctamente', 'success');
+  } catch (error) {    
+    if (error.response) {
+      // console.log('Status:', error.response.status);
+      // console.log('Data:', error.response.data);
+      const backendErrors = {};
+
+      if (error.response?.data?.detail) {
+        const errorDetail = error.response.data.detail;
+
+        if (Array.isArray(errorDetail)) {   // en caso de multiples erroes
+          errorDetail.forEach(err => {
+            if (err.loc && err.loc.length > 1) {
+              backendErrors[err.loc[1]] = err.msg;
+              }
+          });
+        }
+        else if (typeof errorDetail === 'object' && errorDetail.field) {
+          backendErrors[errorDetail.field] = errorDetail.message;
+        }
+
+        addClientErrors.value = backendErrors;
+        const errorMessages = Object.values(backendErrors).join(', ');
+        showSnackbar(errorMessages || 'Ocurrió un error inesperado.', 'error');
+      } else {
+        const message = error.response.data?.message || `Error del servidor: ${error.response.status}`;
+        showSnackbar(message, 'error');
+      }
+    } else if (error.request) {
+      console.log('Error de red:', error.request);
+      showSnackbar('Error de conexión con el servidor', 'error');
+    } else {
+      console.log('Error:', error.message);
+      showSnackbar('Error inesperado: ' + error.message, 'error');
+    }
   } finally {
     addingClient.value = false;
-  } 
+  }
 }
+
+const editClientErrors = ref({});
 
 async function handlerEditClient(clientData) {
   editingClient.value = true;
+  editClientErrors.value = {};
   try {
     await api.put(`/clientes/${currentClient.value.ci_cliente}`, clientData);
     await fetchClientes();
     showEditDialog.value = false;
     currentClient.value = null;
+    showSnackbar('Cliente editado correctamente', 'success');
   } catch (error) {
-    console.error('Error editing client:', error);
+    console.log('este es el error que me da', error);
+    
+    if (error.response?.status === 422 && Array.isArray(error.response.data.detail)) {
+      // Parse validation errors
+      const backendErrors = {};
+      for (const err of error.response.data.detail) {
+        if (err.loc && err.loc.length > 1) {
+          backendErrors[err.loc[1]] = err.msg;
+        }
+      }
+      editClientErrors.value = backendErrors;
+    } else {
+      const message = error.response?.data?.message || 'Error al editar el cliente';
+      showSnackbar(message, 'error');
+    }
   } finally {
     editingClient.value = false;
   }
@@ -62,8 +121,10 @@ async function handlerDeleteClient(ci_cliente) {
     await fetchClientes();
     showDeleteDialog.value = false;
     currentClient.value = null;
+    showSnackbar('Cliente eliminado correctamente', 'success');
   } catch (error) {
-    console.error('Error deleting client:', error);
+    const message = error.response?.data?.message || 'Error al eliminar el cliente';
+    showSnackbar(message, 'error');
   } finally {
     deletingClient.value = false;
   }
@@ -120,9 +181,11 @@ onMounted(() => {
     <!-- Add Client Dialog -->
     <ClientForm
       v-model:show="showAddDialog"
-      :loading="addingClient"      
+      :loading="addingClient"
       title="Agregar Nuevo Cliente"
+      :errors="addClientErrors"
       @submit="handleAddClient"
+      @update:show="(val) => { showAddDialog = val; if (!val) addClientErrors.value = {}; }"
     />
 
     <!-- Edit Client Dialog -->
@@ -131,7 +194,9 @@ onMounted(() => {
       :loading="editingClient"
       :client-data="currentClient"
       title="Editar Cliente"
+      :errors="editClientErrors"
       @submit="handlerEditClient"
+      @update:show="(val) => { showEditDialog = val; if (!val) editClientErrors.value = {}; }"
     />
 
     <!-- Delete Client Dialog -->

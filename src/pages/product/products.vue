@@ -1,75 +1,150 @@
 <script setup>
+import { ref, onMounted } from 'vue';
+import ProductList from '@/components/product/ProductList.vue';
+import ProductForm from '@/components/product/ProductForm.vue';
+import ProductDelete from '@/components/product/ProductDelete.vue';
 import BacktoHome from '@/components/BacktoHome.vue';
+import api from '@/api/api';
 
+const productos = ref([]);
+const loading = ref(false);
+const addingProduct = ref(false);
+const editingProduct = ref(false);
+const deletingProduct = ref(false);
+const showAddDialog = ref(false);
+const showEditDialog = ref(false);
+const showDeleteDialog = ref(false);
+const currentProduct = ref(null);
+
+async function fetchProducts() {
+  loading.value = true;
+  try {
+    const response = await api.get('/productos');
+    productos.value = response.data;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function handleAddProduct(productData) {
+  addingProduct.value = true;
+  try {
+    await api.post('/productos', productData);
+    await fetchProducts();
+    showAddDialog.value = false;
+  } catch (error) {
+    console.error('Error adding product:', error);
+  } finally {
+    addingProduct.value = false;
+  } 
+}
+
+async function handlerEditProduct(productData) {
+  editingProduct.value = true;
+  try {
+    await api.put(`/productos/${currentProduct.value.ci_producto}`, productData);
+    await fetchProducts();
+    showEditDialog.value = false;
+    currentProduct.value = null;
+  } catch (error) {
+    console.error('Error editing product:', error);
+  } finally {
+    editingProduct.value = false;
+  }
+}
+
+async function handlerDeleteProduct(ci_producto) {
+  deletingProduct.value = true;
+  try {
+    await api.delete(`/productos/${ci_producto}`);
+    await fetchProducts();
+    showDeleteDialog.value = false;
+    currentProduct.value = null;
+  } catch (error) {
+    console.error('Error deleting product:', error);
+  } finally {
+    deletingProduct.value = false;
+  }
+}
+
+function handleEditClick(producto) {
+  currentProduct.value = producto;
+  showEditDialog.value = true;
+}
+
+function handleDeleteClick(producto) { 
+  currentProduct.value = producto; 
+  showDeleteDialog.value = true;
+}
+
+onMounted(() => {
+  fetchProducts();
+});
 </script>
 
 <template>
-    <div class="clients-page">
-      <v-container>
-        <v-row>
-          <v-col cols="12">
-            <BacktoHome/>
+  <div class="products-page">
+    <v-container>
+      <v-row>
+        <v-col cols="12">
+          <backto-home></backto-home>
+          
+          <v-card>
+            <v-card-title class="d-flex justify-space-between align-center">
+              <span>Gestión de Productos</span>
+              <v-btn
+                color="primary"
+                @click="showAddDialog = true"
+              >
+                <v-icon left>mdi-plus</v-icon>
+                Agregar Producto
+              </v-btn>
+            </v-card-title>
             
-            <v-card>
-              <v-card-title class="d-flex justify-space-between align-center">
-                <span>Product Management</span>
-                <v-btn
-                  color="primary"
-                  @click="showAddDialog = true"
-                >
-                  <v-icon left>mdi-plus</v-icon>
-                  Add Product
-                </v-btn>
-              </v-card-title>
-              
-              <v-card-text>
-                <client-list 
-                  :clientes="clientes" 
-                  :loading="loading"
-                  @refresh="fetchClientes"
-                />
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-container>
-  
-      <!-- Add Client Dialog -->
-      <v-dialog v-model="showAddDialog" max-width="500">
-        <v-card>
-          <v-card-title>Add New Product</v-card-title>
-          <v-card-text>
-            <v-form @submit.prevent="handleAddProduct">
-              <v-text-field
-                v-model="newProduct.nombre"
-                label="Name"
-                required
-                :rules="[v => !!v || 'Name is required']"
-                class="mb-4"
+            <v-card-text>
+              <product-list 
+                :productos="productos" 
+                :loading="loading"
+                @refresh="fetchProducts"
+                @edit="handleEditClick"
+                @delete="handleDeleteClick"
               />
-              <v-text-field
-                v-model="newClient.ci_cliente"
-                label="CI"
-                required
-                :rules="[
-                  v => !!v || 'CI is required',
-                  v => /.+@.+\..+/.test(v) || 'Email must be valid',
-                ]"
-              />
-            </v-form>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn text @click="showAddDialog = false">Cancel</v-btn>
-            <v-btn 
-              color="primary" 
-              @click="handleAddClient"
-              :loading="addingClient"
-            >
-              Save
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-    </div>
-  </template>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-container>
+
+    <ProductForm
+      v-model:show="showAddDialog"
+      :loading="addingProduct" 
+      title="Agregar Nuevo Producto"
+      @submit="handleAddProduct"
+    />
+
+    <ProductForm
+      v-model:show="showEditDialog"
+      :loading="editingProduct"
+      :product-data="currentProduct"
+      title="Editar Producto"
+      @submit="handlerEditProduct"
+    />
+
+    <ProductDelete
+      v-model:show="showDeleteDialog"
+      :loading="deletingProduct"
+      :product-data="currentProduct"
+      title="Eliminar Producto"
+      @confirmDelete="handlerDeleteProduct"
+    />   
+  </div>
+</template>
+
+
+<style scoped>
+.products-page {
+  padding: 20px 0;
+}
+</style>

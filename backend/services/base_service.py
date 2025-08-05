@@ -1,5 +1,15 @@
 import sqlite3
 from typing import Type, List, Optional, Any, Dict
+from fastapi import HTTPException
+
+class DuplicateKeyError(Exception):
+    """Excepción personalizada para claves duplicadas."""
+    def __init__(self, field: str, value: Any, message: str = None):
+        self.field = field
+        self.value = value
+        self.message = message or f"Ya existe un registro con {field} = {value}"
+        super().__init__(self.message)
+
 
 class BaseService:
     """
@@ -11,7 +21,7 @@ class BaseService:
     solo necesitas pasar el modelo, el nombre de la tabla y la ruta de la base de datos.
     """
     
-    def __init__(self, model: Type, table_name: str, db_path: str):
+    def __init__(self, model: Type, table_name: str, db_path: str, unique_fields: List[str] = None):
         """
         Inicializa el servicio base para una entidad.
         :param model: Clase del modelo Pydantic.
@@ -21,6 +31,7 @@ class BaseService:
         self.model = model
         self.table_name = table_name
         self.db_path = db_path
+        self.unique_fields = unique_fields or []
 
     def get_all(self) -> List[Any]:
         """
@@ -64,22 +75,71 @@ class BaseService:
                 return self.model.from_dict(dict(zip([col[0] for col in cursor.description], row)))
             return None
 
+    def _check_unique_constraints(self, obj_data: Dict[str, Any], exclude_id: Any = None) -> None:
+        """
+        Verifica las restricciones de unicidad antes de crear/actualizar.
+        :param obj_data: Datos del objeto a verificar.
+        :param exclude_id: ID a excluir en la verificación (para updates).
+        :raises DuplicateKeyError: Si encuentra un duplicado.
+        """
+        for field in self.unique_fields:
+            if field in obj_data:
+                value = obj_data[field]
+                with sqlite3.connect(self.db_path) as conn:
+                    cursor = conn.cursor()
+                    
+                    # Query base para verificar duplicados
+                    query = f"SELECT COUNT(*) FROM {self.table_name} WHERE {field} = ?"
+                    params = [value]
+                    
+                    # Si es un update, excluir el registro actual
+                    if exclude_id is not None:
+                        # Asumimos que el primer campo único es la primary key
+                        pk_field = self.unique_fields[0] if self.unique_fields else field
+                        query += f" AND {pk_field} != ?"
+                        params.append(exclude_id)
+                    
+                    cursor.execute(query, params)
+                    count = cursor.fetchone()[0]
+                    
+                    if count > 0:
+                        raise DuplicateKeyError(field, value)
+
     def create(self, obj_in) -> Any:
         """
         Inserta un nuevo registro en la tabla.
         :param obj_in: Instancia del modelo a insertar.
+        :raises DuplicateKeyError: Si viola restricciones de unicidad.
         """
         data = obj_in.to_dict()
+        
+        # Verificar restricciones de unicidad
+        self._check_unique_constraints(data)
+        
         fields = ', '.join(data.keys())
         placeholders = ', '.join(['?'] * len(data))
         values = tuple(data.values())
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                f"INSERT INTO {self.table_name} ({fields}) VALUES ({placeholders})",
-                values
-            )
-            conn.commit()
+        
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    f"INSERT INTO {self.table_name} ({fields}) VALUES ({placeholders})",
+                    values
+                )
+                conn.commit()
+        except sqlite3.IntegrityError as e:
+            # Manejar errores de integridad de SQLite
+            error_msg = str(e).lower()
+            
+            # Intentar identificar qué campo causó el error
+            for field in self.unique_fields:
+                if field.lower() in error_msg:
+                    raise DuplicateKeyError(field, data.get(field))
+            
+            # Si no podemos identificar el campo específico
+            raise DuplicateKeyError("unknown", "unknown", "Error de integridad: registro duplicado")
+        
         return data
 
     def update(self, id_field: str, id_value: Any, obj_in) -> bool:

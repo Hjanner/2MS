@@ -1,8 +1,8 @@
 <script>
 export default {
-  name: 'ClientList',
+  name: 'ProductList',
   props: {
-    clientes: {
+    productos: {
       type: Array,
       required: true,
       default: () => []
@@ -15,7 +15,7 @@ export default {
   data() {
     return {
       headers: [
-        { title: 'C.I. Cliente', key: 'ci_cliente', sortable: false },
+        { title: 'C.I. Producto', key: 'ci_producto', sortable: false },
         { title: 'Nombre', key: 'nombre' },
         { title: 'Teléfono', key: 'tlf', sortable: false },
         { title: 'Depto/Escuela', key: 'depto_escuela' },
@@ -28,7 +28,7 @@ export default {
 </script>
 
 <template>
-  <div class="client-list">
+  <div class="product-list">
     <v-progress-linear
       v-if="loading"
       indeterminate
@@ -37,17 +37,17 @@ export default {
     ></v-progress-linear>
 
     <v-alert
-      v-if="!loading && clientes.length === 0"
+      v-if="!loading && productos.length === 0"
       type="info"
       class="mb-4"
     >
-      No se encontraron clientes.
+      No se encontraron productos.
     </v-alert>
 
     <!-- render de lista de datos -->
     <v-data-table 
       :headers="headers"
-      :items="clientes"
+      :items="productos"
       :loading="loading"
       item-key="id"
       class="elevation-1"
@@ -83,7 +83,7 @@ export default {
 
 
 <style scoped>
-.client-list {
+.product-list {
   width: 100%;
 }
 .btn-action{

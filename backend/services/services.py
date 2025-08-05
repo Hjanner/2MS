@@ -1,9 +1,9 @@
 from backend.models.models import *
 from database.database import db_path
 from backend.services.base_service import BaseService
-from .pydolarve_service import PyDolarVE
+# from backend.services.base_service import 
 
-cliente_service = BaseService(Cliente, "Clientes", db_path)
+cliente_service = BaseService(Cliente, "Clientes", db_path, unique_fields=["ci_cliente"])
 proveedor_service = BaseService(Proveedor, "Proveedores", db_path)
 producto_service = BaseService(Producto, "Productos", db_path)
 venta_service = BaseService(Venta, "Ventas", db_path)

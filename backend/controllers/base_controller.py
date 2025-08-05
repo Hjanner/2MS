@@ -1,4 +1,6 @@
 from typing import List, Optional, TypeVar, Generic, Dict, Any
+from fastapi import HTTPException
+from backend.services.base_service import DuplicateKeyError
 
 T = TypeVar('T')  # Modelo Pydantic
 
@@ -42,8 +44,30 @@ class BaseController(Generic[T]):
         """
         Crea un nuevo registro en la entidad.
         :param obj_in: Instancia del modelo a crear.
+        :raises HTTPException: 409 si hay duplicados, 400 para otros errores.
         """
-        return self.service.create(obj_in)
+        try:
+            return self.service.create(obj_in)
+
+        except DuplicateKeyError as e:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": e.message,
+                    "field": e.field,
+                    "value": e.value,
+                    "code": "DUPLICATE_KEY"
+                }
+            )
+        # except Exception as e:
+        #     raise HTTPException(
+        #         status_code=400,
+        #         detail={
+        #             "message": f"Error al crear el registro: {str(e)}",
+        #             "code": "CREATE_ERROR"
+        #         }
+        #     )
+
 
     def update(self, id_field: str, id_value, obj_in: T) -> bool:
         """

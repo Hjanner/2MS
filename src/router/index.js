@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router/auto'
 import { routes } from 'vue-router/auto-routes'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL || 'http://localhost:3000'),   
+  history: createWebHistory(import.meta.env.VITE_BASE_URL || 'http://localhost:3000'),   
   routes,
 })
 

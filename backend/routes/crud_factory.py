@@ -1,5 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from typing import Type, List, Dict, Any
+# from sqlalchemy.orm import Session
+# from sqlalchemy.exc import IntegrityError
+
 
 def create_crud_router(
     entity_name: str,

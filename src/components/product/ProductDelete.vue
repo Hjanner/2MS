@@ -6,7 +6,7 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
-  clientData: {
+  productData: {
     type: Object,
     default: null,
   },
@@ -22,9 +22,12 @@ function closeDialog() {
   emit('update:show', false);
 }
 
-function handleConfirm() {    
-  if (props.clientData) {
-    emit('confirmDelete', props.clientData.ci_cliente);
+function handleConfirm() {
+  console.log('entre1');
+  console.log(props.productData);
+    
+  if (props.productData) {
+    emit('confirmDelete', props.productData.ci_producto);
   }
 }
 </script>
@@ -43,17 +46,17 @@ function handleConfirm() {
         class="mb-4"
       ></v-progress-linear> 
       <v-card-text>
-        <div v-if="clientData">
+        <div v-if="productData">
           <p class="mb-4">
-            ¿Estás seguro de que deseas eliminar al cliente
-            <strong>{{ clientData.nombre }}</strong>?
+            ¿Estás seguro de que deseas eliminar al producto
+            <strong>{{ productData.nombre }}</strong>?
           </p>
           <p class="text-caption text-medium-emphasis">
             Esta acción no se puede deshacer.
           </p>
         </div>
         <div v-else>
-          <p class="mb-4">¿Estás seguro de que deseas eliminar este cliente?</p>
+          <p class="mb-4">¿Estás seguro de que deseas eliminar este producto?</p>
         </div>
       </v-card-text>
 
