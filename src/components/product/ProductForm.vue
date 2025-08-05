@@ -1,6 +1,5 @@
 <script setup>
-import { ref, watch, computed, onMounted } from 'vue';
-import api from '@/api/api';
+import { ref, watch, computed } from 'vue';
 
 const props = defineProps({
   show: Boolean,
@@ -12,6 +11,10 @@ const props = defineProps({
   productData: {
     type: Object,
     default: null
+  },
+  categorias: {
+    type: Array,
+    default: () => []
   },
   errors: { 
     type: Object,
@@ -30,8 +33,7 @@ const product = ref({
 
 const localErrors = ref({});        // Estado para los errores de la API
 const searchQuery = ref('');       // Variable para la búsqueda de categorías
-const categorias = ref([]);        // Lista de categorías disponibles
-const loadingCategorias = ref(false);
+const isEditing = computed(() => !!props.productData);    //// Propiedad computada para determinar el modo del formulario
 
 //manejo de errores desde la api
 watch(() => props.errors, (newErrors) => {
@@ -59,26 +61,13 @@ const filteredCategorias = computed(() => {
 
 // Formatear categorías para el autocomplete
 const formattedCategorias = computed(() => {
-  return categorias.value.map(categoria => ({
+  return props.categorias.map(categoria => ({
     value: categoria.id_categoria,
     text: `${categoria.descr} (${categoria.tipo})`,
     title: categoria.descr,
     subtitle: `Tipo: ${categoria.tipo}`
   }));
 });
-
-// Cargar categorías al montar el componente
-async function fetchCategorias() {
-  loadingCategorias.value = true;
-  try {
-    const response = await api.get('/categoria_productos');
-    categorias.value = response.data;
-  } catch (error) {
-    console.error('Error cargando categorías:', error);
-  } finally {
-    loadingCategorias.value = false;
-  }
-}
 
 function handleSubmit() {
   if (!product.value.nombre || !product.value.cod_producto || !product.value.precio) return;
@@ -126,10 +115,6 @@ function validateCode(value) {
   if (value.length > 20) return 'Código debe tener máximo 20 caracteres';
   return true;
 }
-
-onMounted(() => {
-  fetchCategorias();
-});
 </script>
 
 <template>
@@ -151,6 +136,7 @@ onMounted(() => {
             class="mb-4"
             hint="Código único identificador del producto"
             persistent-hint
+            :readonly="isEditing"
           />
 
           <v-text-field
@@ -186,7 +172,6 @@ onMounted(() => {
             item-value="value"
             label="Seleccionar categoría"
             clearable
-            :loading="loadingCategorias"
             :menu-props="{ maxHeight: '300px' }"
             :error-messages="localErrors.id_categoria"
             hint="Opcional: Categoría del producto"
@@ -223,7 +208,6 @@ onMounted(() => {
         <v-spacer></v-spacer>
         <v-btn 
           color="primary" 
-          variant="outlined"
           @click="close"
         >
           Cancelar

@@ -18,12 +18,34 @@ const currentProduct = ref(null);
 const { showSnackbar } = useSnackbar();
 const addProductErrors = ref({});
 const editProductErrors = ref({});
+const categorias = ref([]);
+
+async function fetchCategorias() {
+  try {
+    const response = await api.get('/categoria_productos');
+    categorias.value = response.data;
+  } catch (error) {
+    showSnackbar('Error al cargar categorías', 'error');
+  }
+}
 
 async function fetchProducts() {
   loading.value = true;
   try {
     const response = await api.get('/productos');
-    productos.value = response.data;
+    // Mapear productos y añadir nombre de categoría
+    console.log('aca deberian estar las categorias', categorias);
+    
+    productos.value = response.data.map(producto => {
+      const categoria = categorias.value.find(c => c.id_categoria === producto.id_categoria);
+      return {
+        ...producto,
+        nombre_categoria: categoria ? categoria.descr : 'Sin categoría'
+      };
+    });
+
+    console.log(productos);
+    
   } catch (error) {
     const message = error.response?.data?.message || 'Error al cargar los productos';
     showSnackbar(message, 'error');
@@ -92,7 +114,7 @@ async function handlerEditProduct(productData) {
   } catch (error) {
     console.log('este es el error que me da', error);
     
-    if (error.response?.status === 422 && Array.isArray(error.response.data.detail)) {
+    if (Array.isArray(error.response.data.detail)) {
       // Parse validation errors
       const backendErrors = {};
       for (const err of error.response.data.detail) {
@@ -115,14 +137,14 @@ function handleEditClick(producto) {
   showEditDialog.value = true;
 }
 
-
 // Manejar los datos filtrados del componente de búsqueda
 function handleFilteredData(filtered) {
   filteredProductos.value = filtered;
 }
 
-onMounted(() => {
-  fetchProducts();
+onMounted(async () => {
+  await fetchCategorias();
+  await fetchProducts();
 });
 </script>
 
@@ -149,8 +171,8 @@ onMounted(() => {
                 <!-- Componente de búsqueda -->
                 <SearchFilter
                   :data="productos"
-                  :search-fields="['cod_producto', 'nombre', 'precio', 'id_categoria']"
-                  placeholder="Buscar productos por código, nombre, precio o categoría..."
+                  :search-fields="['nombre', 'precio', 'nombre_categoria']"
+                  placeholder="Buscar productos por nombre, precio o categoría..."
                   :show-field-filter="true"
                   result-text="productos"
                   @filtered="handleFilteredData"
@@ -160,6 +182,7 @@ onMounted(() => {
                 <product-list 
                   :productos="filteredProductos" 
                   :loading="loading"
+                  :categorias="categorias"                  
                   @refresh="fetchProducts"
                   @edit="handleEditClick"
                 />
@@ -175,6 +198,7 @@ onMounted(() => {
       v-model:show="showAddDialog"
       :loading="addingProduct"
       title="Agregar Nuevo Producto"
+      :categorias="categorias"
       :errors="addProductErrors"
       @submit="handleAddProduct"
       @update:show="(val) => { showAddDialog = val; if (!val) addProductErrors.value = {}; }"
@@ -185,6 +209,7 @@ onMounted(() => {
       v-model:show="showEditDialog"
       :loading="editingProduct"
       :product-data="currentProduct"
+      :categorias="categorias"
       title="Editar Producto"
       :errors="editProductErrors"
       @submit="handlerEditProduct"

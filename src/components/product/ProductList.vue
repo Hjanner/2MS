@@ -11,14 +11,18 @@ export default {
       type: Boolean,
       default: false
     },
+    categorias: {
+      type: Array,
+      default: () => []
+    }
   },
   data() {
     return {
       headers: [
-        { title: 'Código Producto', key: 'cod_producto', sortable: false },
+        // { title: 'Código Producto', key: 'cod_producto', sortable: false },
         { title: 'Nombre', key: 'nombre' },
         { title: 'Precio', key: 'precio', sortable: true },
-        { title: 'ID Categoría', key: 'id_categoria', sortable: true },
+        { title: 'Categoría', key: 'nombre_categoria', },
         { title: 'Acciones', key: 'actions', sortable: false },
       ],
     };
