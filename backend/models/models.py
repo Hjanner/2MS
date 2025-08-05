@@ -264,7 +264,7 @@ class DetalleVenta(BaseModel, DetalleVentaValidators):
     """
     id_detalle: Optional[int] = Field(None, description="ID único del detalle de venta (AUTOINCREMENT)")
     id_venta: int = Field(..., description="ID de la venta a la que pertenece el detalle (clave foránea)")
-    id_producto: str = Field(..., description="ID del producto en el detalle (clave foránea)")
+    cod_producto: str = Field(..., description="Codigo del producto en el detalle (clave foránea)")
     cantidad_producto: int = Field(..., description="Cantidad del producto vendido")
     precio_unitario: float = Field(..., description="Precio unitario del producto al momento de la venta")
 
@@ -276,7 +276,7 @@ class DetalleVenta(BaseModel, DetalleVentaValidators):
         return DetalleVenta(**data)
 
     def __repr__(self) -> str:
-        return f"DetalleVenta(ID: {self.id_detalle}, Venta ID: {self.id_venta}, Producto: {self.id_producto}, Cant: {self.cantidad_producto})"
+        return f"DetalleVenta(ID: {self.id_detalle}, Venta ID: {self.id_venta}, Producto: {self.cod_producto}, Cant: {self.cantidad_producto})"
 
 class CompraInventario(BaseModel, CompraInventarioValidators):
     """

@@ -121,11 +121,11 @@ CREATE TABLE IF NOT EXISTS Inventarios (
 CREATE TABLE IF NOT EXISTS Detalle_Venta (
   id_detalle INTEGER PRIMARY KEY AUTOINCREMENT,
   id_venta INTEGER,
-  id_producto TEXT,
+  cod_producto TEXT,
   cantidad_producto INTEGER,
   precio_unitario REAL,
   FOREIGN KEY (id_venta) REFERENCES Ventas(id_venta),
-  FOREIGN KEY (id_producto) REFERENCES Productos(cod_producto)
+  FOREIGN KEY (cod_producto) REFERENCES Productos(cod_producto)
 );
 
 CREATE TABLE IF NOT EXISTS Compra_Inventario (

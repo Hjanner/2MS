@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import ProductList from '@/components/product/ProductList.vue';
 import ProductForm from '@/components/product/ProductForm.vue';
-import ProductDelete from '@/components/product/ProductDelete.vue';
 import SearchFilter from '@/components/common/SearchFilter.vue'; 
 import BacktoHome from '@/components/BacktoHome.vue';
 import api from '@/api/api';
@@ -13,10 +12,8 @@ const filteredProductos = ref([]);
 const loading = ref(false);
 const addingProduct = ref(false);
 const editingProduct = ref(false);
-const deletingProduct = ref(false);
 const showAddDialog = ref(false);
 const showEditDialog = ref(false);
-const showDeleteDialog = ref(false);
 const currentProduct = ref(null);
 const { showSnackbar } = useSnackbar();
 const addProductErrors = ref({});
@@ -113,41 +110,16 @@ async function handlerEditProduct(productData) {
   }
 }
 
-async function handlerDeleteProduct(cod_producto) {
-  deletingProduct.value = true;
-  try {
-    await api.delete(`/productos/${cod_producto}`);
-    await fetchProducts();
-    showDeleteDialog.value = false;
-    currentProduct.value = null;
-    showSnackbar('Producto eliminado correctamente', 'success');
-  } catch (error) {
-    const message = error.response?.data?.message || 'Error al eliminar el producto';
-    showSnackbar(message, 'error');
-  } finally {
-    deletingProduct.value = false;
-  }
-}
-
 function handleEditClick(producto) {
   currentProduct.value = producto;
   showEditDialog.value = true;
 }
 
-function handleDeleteClick(producto) {    
-  currentProduct.value = producto;  
-  showDeleteDialog.value = true;
-}
 
 // Manejar los datos filtrados del componente de búsqueda
 function handleFilteredData(filtered) {
   filteredProductos.value = filtered;
 }
-
-// Opcional: manejar eventos de búsqueda para analytics o logs
-// function handleSearch(searchData) {
-//   console.log('Búsqueda realizada:', searchData);
-// }
 
 onMounted(() => {
   fetchProducts();
@@ -190,7 +162,6 @@ onMounted(() => {
                   :loading="loading"
                   @refresh="fetchProducts"
                   @edit="handleEditClick"
-                  @delete="handleDeleteClick"
                 />
 
             </v-card-text>
@@ -218,17 +189,7 @@ onMounted(() => {
       :errors="editProductErrors"
       @submit="handlerEditProduct"
       @update:show="(val) => { showEditDialog = val; if (!val) editProductErrors.value = {}; }"
-    />
-
-    <!-- Delete Product Dialog -->
-    <ProductDelete
-      v-model:show="showDeleteDialog"
-      :loading="deletingProduct"
-      :product-data="currentProduct"
-      title="Eliminar Producto"
-      @confirmDelete="handlerDeleteProduct"
-    />
-      
+    />      
 </div>
 </template>
 

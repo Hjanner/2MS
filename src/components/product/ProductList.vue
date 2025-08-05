@@ -23,7 +23,7 @@ export default {
       ],
     };
   },
-  emits: ['refresh', 'edit', 'delete', 'info'],
+  emits: ['refresh', 'edit', 'info'],
   methods: {
     formatPrice(price) {
       return new Intl.NumberFormat('es-VE', {
@@ -83,9 +83,6 @@ export default {
         <div class="d-flex align-center gap-2 btn-action">
           <v-btn icon size="small" @click="$emit('edit', item)">
             <v-icon>mdi-pencil-outline</v-icon>
-          </v-btn>
-          <v-btn icon size="small" color="error" @click="$emit('delete', item)">
-            <v-icon>mdi-delete-outline</v-icon>
           </v-btn>
           <v-btn icon size="small" color="primary" @click="$emit('info', item)">
             <v-icon>mdi-information-outline</v-icon>
