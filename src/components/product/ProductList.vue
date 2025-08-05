@@ -15,15 +15,23 @@ export default {
   data() {
     return {
       headers: [
-        { title: 'C.I. Producto', key: 'ci_producto', sortable: false },
+        { title: 'Código Producto', key: 'cod_producto', sortable: false },
         { title: 'Nombre', key: 'nombre' },
-        { title: 'Teléfono', key: 'tlf', sortable: false },
-        { title: 'Depto/Escuela', key: 'depto_escuela' },
+        { title: 'Precio', key: 'precio', sortable: true },
+        { title: 'ID Categoría', key: 'id_categoria', sortable: true },
         { title: 'Acciones', key: 'actions', sortable: false },
       ],
     };
   },
-  emits: ['refresh', 'edit', 'delete', 'info']
+  emits: ['refresh', 'edit', 'delete', 'info'],
+  methods: {
+    formatPrice(price) {
+      return new Intl.NumberFormat('es-VE', {
+        style: 'currency',
+        currency: 'VES'
+      }).format(price);
+    }
+  }
 };
 </script>
 
@@ -49,9 +57,26 @@ export default {
       :headers="headers"
       :items="productos"
       :loading="loading"
-      item-key="id"
+      item-key="cod_producto"
       class="elevation-1"
     >
+      <!-- Custom slot para formatear el precio -->
+      <template v-slot:item.precio="{ item }">
+        {{ formatPrice(item.precio) }}
+      </template>
+
+      <!-- Custom slot para mostrar ID de categoría -->
+      <template v-slot:item.id_categoria="{ item }">
+        <v-chip 
+          v-if="item.id_categoria" 
+          size="small" 
+          color="primary" 
+          variant="outlined"
+        >
+          {{ item.id_categoria }}
+        </v-chip>
+        <span v-else class="text-grey">Sin categoría</span>
+      </template>
 
       <!-- mostrar botones de accion -->
       <template v-slot:item.actions="{ item }">
@@ -80,7 +105,6 @@ export default {
     </div>
   </div>
 </template>
-
 
 <style scoped>
 .product-list {

@@ -146,10 +146,9 @@ function handleFilteredData(filtered) {
 }
 
 // Opcional: manejar eventos de búsqueda para analytics o logs
-function handleSearch(searchData) {
-  console.log('Búsqueda realizada:', searchData);
-  // Aquí puedes agregar lógica adicional como analytics
-}
+// function handleSearch(searchData) {
+//   console.log('Búsqueda realizada:', searchData);
+// }
 
 onMounted(() => {
   fetchClientes();

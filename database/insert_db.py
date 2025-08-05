@@ -34,18 +34,18 @@ def insert_data():
 
 # --- Inserts para la tabla categoria_productos ---
         categorias_data = [
-            ('Juegos de Mesa', 'noPreparado'),
-            ('Almuerzos Caseros', 'preparado'),
-            ('Cenas Especiales', 'preparado'),
-            ('Snacks Empaquetados', 'noPreparado'),
-            ('Refrescos y Bebidas', 'noPreparado'),
-            ('Postres Artesanales', 'preparado')
+            ('Mani', 'noPreparado'),
+            ('Almuerzos', 'preparado'),
+            ('Cenas', 'preparado'),
+            ('Snacks', 'noPreparado'),
+            ('Refrescos', 'noPreparado'),
+            ('Postres', 'preparado')
         ]
         cursor.executemany("INSERT OR IGNORE INTO categoria_productos (descr, tipo) VALUES (?, ?)", categorias_data)
 
 # --- Inserts para la tabla Productos ---
         productos_data = [
-            ('PROD001', 'Monopoly', 35.50, 1),
+            ('PROD001', 'Mani dulce', 35.50, 1),
             ('PROD002', 'Pabellón Criollo', 8.75, 2),
             ('PROD003', 'Lasagna Boloñesa', 9.99, 3),
             ('PROD004', 'Galletas Chispas', 2.10, 4),
@@ -89,7 +89,7 @@ def insert_data():
 
 # --- Inserts para la tabla Inventarios (movimientos de entrada por compras) ---
         inventarios_data = [
-            ('PROD001', 'compra', 'Compra inicial de Monopoly', 'entrada', 10, '2024-07-01'),
+            ('PROD001', 'compra', 'Compra inicial de mani dulce', 'entrada', 10, '2024-07-01'),
             ('PROD004', 'compra', 'Compra de galletas', 'entrada', 40, '2024-07-05'),
             ('PROD005', 'compra', 'Compra de Coca-Cola', 'entrada', 70, '2024-07-05'),
             ('PROD007', 'compra', 'Compra de agua mineral', 'entrada', 50, '2024-07-10'),
