@@ -28,11 +28,14 @@ const product = ref({
   cod_producto: '',
   nombre: '',
   precio: '',
+  img: null,
   id_categoria: null
 });
 
 const localErrors = ref({});        // Estado para los errores de la API
-const searchQuery = ref('');       // Variable para la búsqueda de categorías
+const searchQuery = ref('');        // Variable para la búsqueda de categorías
+const imagePreview = ref(null);     // Para mostrar vista previa de la imagen
+const fileInput = ref(null);        // Referencia al input de archivo
 const isEditing = computed(() => !!props.productData);    //// Propiedad computada para determinar el modo del formulario
 
 //manejo de errores desde la api
@@ -48,6 +51,52 @@ watch(() => props.productData, (newVal) => {
     resetForm();
   }
 }, { immediate: true });
+
+
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    product.value.img = e.target.result; // Esto será un string base64
+    imagePreview.value = e.target.result;
+  };
+  
+  reader.readAsDataURL(file);
+
+  // Validar tipo de archivo
+  // if (!file.type.match('image.*')) {
+  //   localErrors.value.img = 'Solo se permiten imágenes';
+  //   return;
+  // }
+
+  // // Validar tamaño (ejemplo: máximo 2MB)
+  // if (file.size > 2 * 1024 * 1024) {
+  //   localErrors.value.img = 'La imagen no debe exceder 2MB';
+  //   return;
+  // }
+
+  // // Crear vista previa
+  // const reader = new FileReader();
+  // reader.onload = (e) => {
+  //   imagePreview.value = e.target.result;
+  // };
+  // reader.readAsDataURL(file);
+
+  // // Asignar el archivo al objeto producto
+  // product.value.img = file;
+  // localErrors.value.img = null;
+}
+
+function removeImage() {
+  imagePreview.value = null;
+  product.value.img = null;
+  if (fileInput.value) {
+    fileInput.value.value = '';
+  }
+}
 
 // Filtrar categorías basado en la búsqueda
 const filteredCategorias = computed(() => {
@@ -75,13 +124,27 @@ function handleSubmit() {
   localErrors.value = {};         //limpiar errores antes de enviar
   emit('update:errors', {});
 
-  // Convertir precio a número
-  const productData = {
+  if (!isEditing.value && !product.value.img) {           // Validar imagen si es nuevo producto
+    localErrors.value.img = 'La imagen es requerida';
+    return;
+  }
+
+  const productData = new FormData(); // Usar FormData para enviar archivos
+  productData.append('cod_producto', product.value.cod_producto);
+  productData.append('nombre', product.value.nombre);
+  productData.append('precio', parseFloat(product.value.precio));
+  if (product.value.id_categoria) {
+    productData.append('id_categoria', product.value.id_categoria);
+  }
+  if (product.value.img) {            // Agregar imagen si existe
+    productData.append('img', product.value.img);
+  }
+
+  // emit('submit', productData);
+  emit('submit', {
     ...product.value,
     precio: parseFloat(product.value.precio)
-  };
-
-  emit('submit', productData);
+  });
   resetForm();  
 }
 
@@ -92,7 +155,11 @@ function resetForm() {
     precio: '',
     id_categoria: null
   };
+  imagePreview.value = null;
   searchQuery.value = '';
+  if (fileInput.value) {
+    fileInput.value.value = '';
+  }
 }
 
 function close() {
@@ -201,6 +268,46 @@ function validateCode(value) {
               </v-list-item>
             </template>
           </v-autocomplete>
+
+          <!-- Campo para subir imagen -->
+          <v-row class="mb-4">
+            <v-col cols="12">
+              <v-file-input
+                ref="fileInput"
+                v-model="product.img"
+                @change="handleFileUpload"
+                label="Imagen del producto"
+                accept="image/*"
+                prepend-icon="mdi-camera"
+                :error-messages="localErrors.img"
+                :required="!isEditing"
+                :clearable="!isEditing"
+                @click:clear="removeImage"
+              ></v-file-input>
+            </v-col>
+            
+            <!-- Vista previa de la imagen -->
+            <v-col cols="12" v-if="imagePreview || (isEditing && productData.img)">
+              <v-card class="pa-2" elevation="2">
+                <v-card-title class="text-subtitle-1">Vista previa</v-card-title>
+                <v-img
+                  :src="imagePreview || productData.img"
+                  max-height="200"
+                  contain
+                  class="mb-2"
+                ></v-img>
+                <v-btn
+                  v-if="!isEditing"
+                  color="error"
+                  size="small"
+                  @click="removeImage"
+                >
+                  <v-icon left>mdi-delete</v-icon>
+                  Eliminar imagen
+                </v-btn>
+              </v-card>
+            </v-col>
+          </v-row>
         </v-form>
       </v-card-text>
 

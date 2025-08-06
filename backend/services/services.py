@@ -1,7 +1,6 @@
 from backend.models.models import *
 from database.database import db_path
 from backend.services.base_service import BaseService
-# from backend.services.base_service import 
 
 cliente_service = BaseService(Cliente, "Clientes", db_path, unique_fields=["ci_cliente"])
 proveedor_service = BaseService(Proveedor, "Proveedores", db_path)

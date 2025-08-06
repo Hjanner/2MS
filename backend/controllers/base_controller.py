@@ -105,3 +105,19 @@ class BaseController(Generic[T]):
         """
         return self.service.delete_by_keys(keys)
     
+    async def create_with_file(self, obj_in) -> Any:
+        """
+        Crea un nuevo registro con archivo adjunto.
+        :param obj_in: Instancia del modelo con archivo
+        :raises HTTPException: 409 si hay duplicados, 400 para otros errores
+        """
+        try:
+            if hasattr(self.service, 'create_with_file'):
+                return await self.service.create_with_file(obj_in)
+            return self.service.create(obj_in)
+        except DuplicateKeyError as e:
+            raise HTTPException(status_code=409, detail={
+                "message": e.message,
+                "field": e.field,
+                "value": e.value
+            })

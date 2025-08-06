@@ -33,19 +33,14 @@ async function fetchProducts() {
   loading.value = true;
   try {
     const response = await api.get('/productos');
-    // Mapear productos y añadir nombre de categoría
-    console.log('aca deberian estar las categorias', categorias);
-    
+    // Mapear productos y añadir nombre de categoría    
     productos.value = response.data.map(producto => {
       const categoria = categorias.value.find(c => c.id_categoria === producto.id_categoria);
       return {
         ...producto,
         nombre_categoria: categoria ? categoria.descr : 'Sin categoría'
       };
-    });
-
-    console.log(productos);
-    
+    });    
   } catch (error) {
     const message = error.response?.data?.message || 'Error al cargar los productos';
     showSnackbar(message, 'error');

@@ -95,7 +95,7 @@ async function handlerEditClient(clientData) {
   } catch (error) {
     console.log('este es el error que me da', error);
     
-    if (error.response?.status === 422 && Array.isArray(error.response.data.detail)) {
+    if (Array.isArray(error.response.data.detail)) {
       // Parse validation errors
       const backendErrors = {};
       for (const err of error.response.data.detail) {

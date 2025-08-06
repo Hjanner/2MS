@@ -1,3 +1,4 @@
+from fastapi import UploadFile
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
 from datetime import date, datetime
@@ -108,16 +109,28 @@ class Proveedor(BaseModel, ProveedorValidators):
     def __repr__(self) -> str:
         return f"Proveedor(Rif: {self.Rif}, Razón Social: {self.razon_social})"
 
-class Producto(BaseModel, ProductoValidators):
+class ProductoBase(BaseModel, ProductoValidators):
     """
     Modelo para la tabla 'Productos' .
     Información general de un producto.
     """
-    cod_producto: str = Field(..., description="Código único del producto (clave primaria)")
+    cod_producto: str = Field(..., description="Código único del producto")
     nombre: str = Field(..., description="Nombre del producto")
     precio: float = Field(..., description="Precio del producto")
-    id_categoria: Optional[int] = Field(None, description="ID de la categoría del producto (clave foránea)")
+    id_categoria: Optional[int] = Field(None, description="ID de la categoría")
+    
+class ProductoCreate(ProductoBase):
+    """
+    Modelo de la tabla Producto para entrada (creación con archivo).
+    """
+    img: UploadFile = Field(..., description="Archivo de imagen del producto. Solo para recepción en el contexto de una petición HTTP.")
 
+class Producto(ProductoBase):
+    """
+    Modelo de la tabla Producto para salida y base de datos
+    """
+    img: Optional[str] = Field(..., description="URL de la imagen del producto")
+    
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump()
 
@@ -127,6 +140,28 @@ class Producto(BaseModel, ProductoValidators):
 
     def __repr__(self) -> str:
         return f"Producto(Código: {self.cod_producto}, Nombre: {self.nombre}, Precio: {self.precio})"
+
+
+# class Producto(BaseModel, ProductoValidators):
+#     """
+#     Modelo para la tabla 'Productos' .
+#     Información general de un producto.
+#     """
+#     cod_producto: str = Field(..., description="Código único del producto (clave primaria)")
+#     nombre: str = Field(..., description="Nombre del producto")
+#     precio: float = Field(..., description="Precio del producto")
+#     img: str = Field(..., description="Imagen del producto")
+#     id_categoria: Optional[int] = Field(None, description="ID de la categoría del producto (clave foránea)")
+
+#     def to_dict(self) -> Dict[str, Any]:
+#         return self.model_dump()
+
+#     @staticmethod
+#     def from_dict(data: Dict[str, Any]) -> 'Producto':
+#         return Producto(**data)
+
+#     def __repr__(self) -> str:
+#         return f"Producto(Código: {self.cod_producto}, Nombre: {self.nombre}, Precio: {self.precio})"
 
 class ProductoPreparado(BaseModel, ProductoPreparadoValidators):
     """

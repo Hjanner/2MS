@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS Productos (
   cod_producto TEXT PRIMARY KEY,
   nombre TEXT,
   precio REAL,
+  img TEXT,
   id_categoria INTEGER,
   FOREIGN KEY (id_categoria) REFERENCES categoria_productos(id_categoria)
 );

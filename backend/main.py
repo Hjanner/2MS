@@ -1,6 +1,7 @@
 import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from backend.routes.pydolarve_routers import api_utils_router
 
 import backend.utilities.apscheduler as scheduler_config
@@ -9,6 +10,7 @@ from contextlib import asynccontextmanager
 
 with open("tags_metadata.json") as f:
     tags_metadata = json.load(f)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,6 +37,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/public", StaticFiles(directory="public"), name="public")            #para servir la imagenes
 
 
 from backend.routes.routes import *
