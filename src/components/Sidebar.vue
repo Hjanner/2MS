@@ -23,6 +23,27 @@
         prepend-icon="mdi-home"
         title="Inicio"
         value="inicio"
+        to="/"
+      />
+    </v-list>
+
+    <v-list nav>
+      <v-list-item
+        link
+        prepend-icon="mdi-account-group"
+        title="Clientes"
+        value="clients"
+        to="/client/clients"
+      />
+    </v-list>
+
+    <v-list nav>
+      <v-list-item
+        link
+        prepend-icon="mdi-food-variant"
+        title="Productos"
+        value="products"
+        to="/product/products"
       />
     </v-list>
   </v-navigation-drawer>

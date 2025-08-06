@@ -243,6 +243,7 @@ function validateCode(value) {
             :error-messages="localErrors.id_categoria"
             hint="Opcional: Categoría del producto"
             persistent-hint
+            class="mb-8"
           >
             <template v-slot:item="{ props, item }">
               <v-list-item
