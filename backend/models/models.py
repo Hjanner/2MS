@@ -1,3 +1,4 @@
+import sqlite3
 from fastapi import UploadFile
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
@@ -116,7 +117,7 @@ class ProductoBase(BaseModel, ProductoValidators):
     """
     cod_producto: str = Field(..., description="Código único del producto")
     nombre: str = Field(..., description="Nombre del producto")
-    precio: float = Field(..., description="Precio del producto")
+    precio_usd: float = Field(..., description="Precio del producto")
     id_categoria: Optional[int] = Field(None, description="ID de la categoría")
     
 class ProductoCreate(ProductoBase):
@@ -140,28 +141,6 @@ class Producto(ProductoBase):
 
     def __repr__(self) -> str:
         return f"Producto(Código: {self.cod_producto}, Nombre: {self.nombre}, Precio: {self.precio})"
-
-
-# class Producto(BaseModel, ProductoValidators):
-#     """
-#     Modelo para la tabla 'Productos' .
-#     Información general de un producto.
-#     """
-#     cod_producto: str = Field(..., description="Código único del producto (clave primaria)")
-#     nombre: str = Field(..., description="Nombre del producto")
-#     precio: float = Field(..., description="Precio del producto")
-#     img: str = Field(..., description="Imagen del producto")
-#     id_categoria: Optional[int] = Field(None, description="ID de la categoría del producto (clave foránea)")
-
-#     def to_dict(self) -> Dict[str, Any]:
-#         return self.model_dump()
-
-#     @staticmethod
-#     def from_dict(data: Dict[str, Any]) -> 'Producto':
-#         return Producto(**data)
-
-#     def __repr__(self) -> str:
-#         return f"Producto(Código: {self.cod_producto}, Nombre: {self.nombre}, Precio: {self.precio})"
 
 class ProductoPreparado(BaseModel, ProductoPreparadoValidators):
     """
@@ -211,6 +190,7 @@ class Compra(BaseModel):
     id_compra: Optional[int] = Field(None, description="ID único de la compra (AUTOINCREMENT)")
     fecha: date = Field(..., description="Fecha de la compra")
     Rif: str = Field(..., description="RIF del proveedor de la compra (clave foránea)")
+    gasto_total: float = Field(..., description="Gasto total de la compra.")
 
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump(mode='json')
@@ -280,6 +260,8 @@ class Inventario(BaseModel, InventarioValidators):
     comentario: Optional[str] = Field(None, description="Comentario adicional sobre el movimiento (opcional)")
     tipo_movimiento: str = Field(..., description="Tipo de movimiento ('entrada' o 'salida')")
     cant_movida: int = Field(..., description="Cantidad de producto movida")
+    costo_unitario: Optional[float] = Field(..., description="Costo de compra del producto")
+    id_compra: Optional[float] = Field(..., description="ID de la compra asociada al producto")
     fc_actualizacion: date = Field(..., description="Fecha de actualización del movimiento")
 
     def to_dict(self) -> Dict[str, Any]:
@@ -313,26 +295,6 @@ class DetalleVenta(BaseModel, DetalleVentaValidators):
     def __repr__(self) -> str:
         return f"DetalleVenta(ID: {self.id_detalle}, Venta ID: {self.id_venta}, Producto: {self.cod_producto}, Cant: {self.cantidad_producto})"
 
-class CompraInventario(BaseModel, CompraInventarioValidators):
-    """
-    Modelo para la tabla 'Compra_Inventario' .
-    Tabla de unión para registrar qué productos se compraron en una compra y cómo afectaron el inventario.
-    """
-    id_compra: int = Field(..., description="ID de la compra (parte de la clave primaria y foránea)")
-    id_inventario: int = Field(..., description="ID del movimiento de inventario (parte de la clave primaria y foránea)")
-    cod_producto: str = Field(..., description="Código del producto (parte de la clave primaria y foránea)")
-    cant_comprada: int = Field(..., description="Cantidad comprada de este producto en esta compra")
-    monto_unitario: float = Field(..., description="Monto unitario de compra de este producto")
-
-    def to_dict(self) -> Dict[str, Any]:
-        return self.model_dump()
-
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> 'CompraInventario':
-        return CompraInventario(**data)
-
-    def __repr__(self) -> str:
-        return f"CompraInventario(Compra ID: {self.id_compra}, Inventario ID: {self.id_inventario}, Producto: {self.cod_producto})"
 
     """
     Clase para gestionar la conexión a la base de datos SQLite

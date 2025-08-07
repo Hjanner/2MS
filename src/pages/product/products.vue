@@ -166,7 +166,7 @@ onMounted(async () => {
                 <!-- Componente de búsqueda -->
                 <SearchFilter
                   :data="productos"
-                  :search-fields="['nombre', 'precio', 'nombre_categoria']"
+                  :search-fields="['nombre', 'precio_usd', 'nombre_categoria']"
                   placeholder="Buscar productos por nombre, precio o categoría..."
                   :show-field-filter="true"
                   result-text="productos"

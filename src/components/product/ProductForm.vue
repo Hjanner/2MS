@@ -27,7 +27,7 @@ const emit = defineEmits(['submit', 'update:show', 'update:errors']);
 const product = ref({
   cod_producto: '',
   nombre: '',
-  precio: '',
+  precio_usd: '',
   img: null,
   id_categoria: null
 });
@@ -119,7 +119,7 @@ const formattedCategorias = computed(() => {
 });
 
 function handleSubmit() {
-  if (!product.value.nombre || !product.value.cod_producto || !product.value.precio) return;
+  if (!product.value.nombre || !product.value.cod_producto || !product.value.precio_usd) return;
 
   localErrors.value = {};         //limpiar errores antes de enviar
   emit('update:errors', {});
@@ -132,7 +132,7 @@ function handleSubmit() {
   const productData = new FormData(); // Usar FormData para enviar archivos
   productData.append('cod_producto', product.value.cod_producto);
   productData.append('nombre', product.value.nombre);
-  productData.append('precio', parseFloat(product.value.precio));
+  productData.append('precio_usd', parseFloat(product.value.precio_usd));
   if (product.value.id_categoria) {
     productData.append('id_categoria', product.value.id_categoria);
   }
@@ -143,7 +143,7 @@ function handleSubmit() {
   // emit('submit', productData);
   emit('submit', {
     ...product.value,
-    precio: parseFloat(product.value.precio)
+    precio_usd: parseFloat(product.value.precio_usd)
   });
   resetForm();  
 }
@@ -152,7 +152,7 @@ function resetForm() {
   product.value = {
     cod_producto: '',
     nombre: '',
-    precio: '',
+    precio_usd: '',
     id_categoria: null
   };
   imagePreview.value = null;
@@ -216,17 +216,17 @@ function validateCode(value) {
           />
 
           <v-text-field
-            v-model="product.precio"
-            label="Precio"
+            v-model="product.precio_usd"
+            label="Precio USD"
             type="number"
             step="0.01"
             min="0"
             required
             :rules="[validatePrice]"
-            :error-messages="localErrors.precio"
+            :error-messages="localErrors.precio_usd"
             class="mb-4"
             prefix="Bs."
-            hint="Precio de venta del producto"
+            hint="Precio de venta del producto (USD)"
             persistent-hint
           />
           

@@ -1,7 +1,5 @@
 import sqlite3
-import os
 from database import db_name, db_path
-
 
 print("Nombre de la base de datos:", db_name)
 print("Ruta de la base de datos:", db_path)
@@ -45,7 +43,7 @@ CREATE TABLE IF NOT EXISTS categoria_productos (
 CREATE TABLE IF NOT EXISTS Productos (
   cod_producto TEXT PRIMARY KEY,
   nombre TEXT,
-  precio REAL,
+  precio_usd REAL,
   img TEXT,
   id_categoria INTEGER,
   FOREIGN KEY (id_categoria) REFERENCES categoria_productos(id_categoria)
@@ -63,6 +61,7 @@ CREATE TABLE IF NOT EXISTS Compras (
   id_compra INTEGER PRIMARY KEY AUTOINCREMENT,
   fecha DATE,
   Rif TEXT,
+  gasto_total REAL,
   FOREIGN KEY (Rif) REFERENCES Proveedores(Rif)
 );
 
@@ -83,17 +82,17 @@ CREATE TABLE IF NOT EXISTS Productos_noPreparados (
   FOREIGN KEY (Rif) REFERENCES Proveedores(Rif)
 );
 
-  CREATE TABLE IF NOT EXISTS Creditos (
-    id_credito INTEGER PRIMARY KEY AUTOINCREMENT,
-    ci_cliente TEXT,
-    fecha_credito DATE,
-    fecha_ultimo_abono DATE,
-    fecha_tope_pago DATE,
-    monto_total REAL,
-    monto_pagado REAL,
-    estado TEXT CHECK (estado IN ('Pagado', 'Pendiente', 'Parcial')),
-    FOREIGN KEY (ci_cliente) REFERENCES Clientes(ci_cliente)
-  );
+CREATE TABLE IF NOT EXISTS Creditos (
+  id_credito INTEGER PRIMARY KEY AUTOINCREMENT,
+  ci_cliente TEXT,
+  fecha_credito DATE,
+  fecha_ultimo_abono DATE,
+  fecha_tope_pago DATE,
+  monto_total REAL,
+  monto_pagado REAL,
+  estado TEXT CHECK (estado IN ('Pagado', 'Pendiente', 'Parcial')),
+  FOREIGN KEY (ci_cliente) REFERENCES Clientes(ci_cliente)
+);
 
 CREATE TABLE IF NOT EXISTS Pagos (
   id_pago INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -115,8 +114,13 @@ CREATE TABLE IF NOT EXISTS Inventarios (
   comentario TEXT,
   tipo_movimiento TEXT CHECK (tipo_movimiento IN ('entrada', 'salida')),
   cant_movida INTEGER,
-  fc_actualizacion DATE,
-  FOREIGN KEY (cod_producto) REFERENCES Productos(cod_producto)
+  costo_unitario REAL,  -- Nuevo campo, requerido solo para compras
+  id_compra INTEGER,    -- FK opcional a Compras
+  fc_actualizacion DATE NOT NULL,
+  
+  FOREIGN KEY (cod_producto) REFERENCES Productos(cod_producto),
+  FOREIGN KEY (id_compra) REFERENCES Compras(id_compra)
+
 );
 
 CREATE TABLE IF NOT EXISTS Detalle_Venta (
@@ -128,24 +132,12 @@ CREATE TABLE IF NOT EXISTS Detalle_Venta (
   FOREIGN KEY (id_venta) REFERENCES Ventas(id_venta),
   FOREIGN KEY (cod_producto) REFERENCES Productos(cod_producto)
 );
-
-CREATE TABLE IF NOT EXISTS Compra_Inventario (
-  id_compra INTEGER,
-  id_inventario INTEGER,
-  cod_producto TEXT,
-  cant_comprada INTEGER,
-  monto_unitario REAL,
-  PRIMARY KEY (id_compra, id_inventario, cod_producto),
-  FOREIGN KEY (id_compra) REFERENCES Compras(id_compra),
-  FOREIGN KEY (id_inventario) REFERENCES Inventarios(id_inventario),
-  FOREIGN KEY (cod_producto) REFERENCES Productos(cod_producto)
-);
 """
 
 def create_database():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.executescript(schema)
+    cursor.executescript(schema) 
     conn.commit()
     conn.close()
     print(f"Base de datos y tablas creadas en {db_name}")

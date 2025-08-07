@@ -46,7 +46,7 @@ class ProductoValidators:
         v = validate_not_empty(v, "Código de producto")
         return v.upper()
 
-    @field_validator('precio')
+    @field_validator('precio_usd')
     @classmethod
     def validate_precio(cls, v):
         return validate_positive_number(v, "Precio")
@@ -139,10 +139,4 @@ class DetalleVentaValidators:
     @field_validator('cantidad_producto', 'precio_unitario')
     @classmethod
     def validate_detalle(cls, v, field):
-        return validate_positive_number(v, field.name)
-
-class CompraInventarioValidators:
-    @field_validator('cant_comprada', 'monto_unitario')
-    @classmethod
-    def validate_compra(cls, v, field):
         return validate_positive_number(v, field.name)
