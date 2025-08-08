@@ -1,6 +1,11 @@
 <script setup>
+  import { computed } from 'vue'
   import { useRoute } from 'vue-router'
+  import { useFetch } from '@/composables/useFetch.js'
   import { useSearchTerm } from '@/composables/useSearchTerm.js'
+
+  const { data, error } = useFetch('http://127.0.0.1:8000/dolar')
+  const tasa = computed(() => data.value?.valor_usd_bs || [])
 
   const { searchTerm, clearSearchTerm } = useSearchTerm()
 
@@ -33,6 +38,18 @@
           @click:clear="clearSearchTerm()"
         />
       </template>
+    </template>
+
+    <template v-if="error">
+      <span class="text-h6 ">
+        Tasa no disponible
+      </span>
+    </template>
+
+    <template v-else>
+      <span class="text-grey-darken-1 text-subtitle-1">
+        <b>USD 1 = VED {{ tasa }}</b>
+      </span>
     </template>
   </v-app-bar>
 </template>

@@ -5,7 +5,6 @@
   import { useSearchTerm } from '@/composables/useSearchTerm.js'
 
   const { data, error } = useFetch('http://127.0.0.1:8000/productos/')
-
   const items = computed(() => data.value || [])
 
   const { matchesSearchTerm, clearSearchTerm } = useSearchTerm()
