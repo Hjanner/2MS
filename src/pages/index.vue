@@ -1,43 +1,60 @@
 <script setup>
-  import { computed, provide } from 'vue'
+  import { computed, onUnmounted, provide } from 'vue'
   import { useCart } from '@/composables/useCart.js'
   import { useFetch } from '@/composables/useFetch.js'
+  import { useSearchTerm } from '@/composables/useSearchTerm.js'
 
-  const { data, error } = useFetch('https://boringapi.com/api/v1/photos/random?num=10')
-  const items = computed(() => data.value?.photos || [])
+  const { data, error } = useFetch('http://127.0.0.1:8000/productos/')
+  const items = computed(() => data.value || [])
 
-  const { cart, addItem, removeItem, updateQuantity } = useCart()
-  provide('cartActions', { cart, addItem, removeItem, updateQuantity })
+  const { matchesSearchTerm, clearSearchTerm } = useSearchTerm()
+
+  const filteredItems = computed(() =>
+    items.value.filter(i => matchesSearchTerm(i.nombre)),
+  )
+
+  const {
+    getCart,
+    clearCart,
+    addItem,
+    removeItem,
+    createItemQuantityModel,
+    getItemTotal,
+    getCartTotal,
+  } = useCart()
+
+  provide('cartActions', {
+    getCart,
+    clearCart,
+    addItem,
+    removeItem,
+    createItemQuantityModel,
+    getItemTotal,
+    getCartTotal,
+  })
 
   const selectedItems = computed(() =>
-    items.value
-      .filter(i => cart[i.id])
-      .map(i => ({ id: i.id, name: i.title, quantity: cart[i.id].quantity })),
+    items.value.filter(i => i.cod_producto in getCart()),
   )
+
+  onUnmounted(() => {
+    clearSearchTerm()
+    clearCart()
+  })
 </script>
 
 <template>
-  <div class="home-page">
-    <template v-if="error">
-      <v-alert type="error">
-        Error loading content
-      </v-alert>
-    </template>
+  <template v-if="error">
+    Error
+  </template>
 
-    <template v-else-if="items.length > 0">
-      <CardGrid :items />
-    </template>
+  <template v-else-if="items.length > 0">
+    <CardGrid :items="filteredItems" />
+  </template>
 
-    <template v-else>
-      <SkeletonGrid />
-    </template>
+  <template v-else>
+    <SkeletonGrid />
+  </template>
 
-    <Cart :selected-items="selectedItems" />
-  </div>
+  <OrderSummary :selected-items="selectedItems" />
 </template>
-
-<style scoped>
-  .home-page {
-    padding: 20px;
-  }
-</style>

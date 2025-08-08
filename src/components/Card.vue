@@ -10,25 +10,29 @@
 
 <template>
   <v-card
-    v-ripple
-    class="mx-auto cursor-pointer"
-    width="100%"
-    @click="cartActions.addItem(item.id)"
+    density="compact"
+    link
+    variant="tonal"
+    @click="cartActions.addItem(item.cod_producto, item.precio_usd)"
   >
     <v-img
       cover
       height="140"
-      :src="item.url"
+      url="item.img"
     />
 
-    <v-card-item class="text-center">
-      <v-card-title>
-        Producto
-      </v-card-title>
+    <v-card-item
+      class="text-center"
+    >
+      <span class="text-subtitle-2">
+        {{ item.nombre }}
+      </span>
 
-      <v-card-subtitle>
-        Precio
-      </v-card-subtitle>
+      <br>
+
+      <span class="text-grey-darken-2 text-subtitle-2">
+        USD {{ item.precio_usd.toFixed(2) }}
+      </span>
     </v-card-item>
   </v-card>
 </template>

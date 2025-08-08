@@ -1,5 +1,17 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
+import { UNIDADES_MEDIDAS } from '@/api/data';
+import { 
+  validateRequired,
+  validateCode,
+  validatePrice,
+  validateMinQuantity,
+  validateCost,
+  validateImage,
+  validateRIF,
+  validatePositiveNumber
+} from '@/utils/validators.js';
+
 
 const props = defineProps({
   show: Boolean,
@@ -50,7 +62,7 @@ const noPreparadoData = ref({
 
 // Estados específicos para productos preparados
 const preparadoData = ref({
-  descr_preparado: ''
+  descr: ''
 });
 
 const localErrors = ref({});
@@ -58,18 +70,6 @@ const searchQuery = ref('');
 const imagePreview = ref(null);
 const fileInput = ref(null);
 const isEditing = computed(() => props.mode === 'edit' || !!props.productData);
-
-// Opciones para unidades de medida
-const unidadesMedida = [
-  'unidad',
-  'kg',
-  'gramos',
-  'litros',
-  'mililitros',
-  'piezas',
-  'metros',
-  'centímetros'
-];
 
 // Determinar si el tipo de producto es preparado basado en la categoría seleccionada
 const tipoProductoFromCategoria = computed(() => {
@@ -101,8 +101,13 @@ watch(() => props.productData, (newVal) => {
       tipo_producto: newVal.tipo_producto || 'noPreparado'
     };
 
+    // Establecer imagen de vista previa si existe
+    if (newVal.img) {
+      imagePreview.value = newVal.img;
+    }
+
     // Datos específicos según el tipo
-    if (newVal.tipo_producto === 'noPreparado') {
+    if (newVal.tipo_producto === 'noPreparado' || newVal.cod_producto_noPreparado) {
       noPreparadoData.value = {
         cant_min: newVal.cant_min || '',
         cant_actual: newVal.cant_actual || '',
@@ -112,13 +117,8 @@ watch(() => props.productData, (newVal) => {
       };
     } else {
       preparadoData.value = {
-        descr_preparado: newVal.descr_preparado || ''
+        descr: newVal.descr || newVal.descr_preparado || ''
       };
-    }
-
-    // Establecer preview de imagen si existe
-    if (newVal.img) {
-      imagePreview.value = newVal.img;
     }
   } else {
     resetForm();
@@ -170,55 +170,42 @@ const formattedCategorias = computed(() => {
 });
 
 function handleSubmit() {
-  // Validaciones básicas
-  if (!product.value.nombre || !product.value.cod_producto || !product.value.precio_usd) {
-    localErrors.value.general = 'Todos los campos obligatorios deben ser completados';
-    return;
-  }
-
-  // Validar imagen si es nuevo producto
-  if (!isEditing.value && !product.value.img) {
-    localErrors.value.img = 'La imagen es requerida';
-    return;
-  }
-
-  // Validaciones específicas por tipo de producto
-  if (product.value.tipo_producto === 'noPreparado') {
-    if (!noPreparadoData.value.cant_min || !noPreparadoData.value.costo_compra) {
-      localErrors.value.general = 'Cantidad mínima y costo de compra son requeridos para productos no preparados';
-      return;
-    }
-  }
-
-  localErrors.value = {};
-  emit('update:errors', {});
-
-  // Construir objeto de datos según el tipo de producto
-  let productData = {
-    ...product.value,
-    precio_usd: parseFloat(product.value.precio_usd)
-  };
-
-  if (product.value.tipo_producto === 'noPreparado') {
-    productData = {
-      ...productData,
-      ...noPreparadoData.value,
-      cant_min: parseInt(noPreparadoData.value.cant_min),
-      cant_actual: parseInt(noPreparadoData.value.cant_actual || 0),
-      costo_compra: parseFloat(noPreparadoData.value.costo_compra)
-    };
-  } else {
-    productData = {
-      ...productData,
-      ...preparadoData.value
-    };
-  }
-
-  emit('submit', productData);
+  localErrors.value = {};           // Resetear errores
   
-  if (!isEditing.value) {
-    resetForm();
+  // Validar campos comunes
+  const commonFieldsValid = [
+    validateCode(product.value.cod_producto),
+    validateRequired('Nombre')(product.value.nombre),
+    validatePrice(product.value.precio_usd),
+    validateRequired('Categoría')(product.value.id_categoria)
+  ].every(result => result === true);
+
+  if (!commonFieldsValid) return;
+
+  // Validar según tipo de producto
+  if (product.value.tipo_producto === 'noPreparado') {
+    const inventoryFieldsValid = [
+      validateMinQuantity(noPreparadoData.value.cant_min),
+      validatePositiveNumber('Cantidad actual')(noPreparadoData.value.cant_actual),
+      validateCost(noPreparadoData.value.costo_compra),
+      validateRequired('Unidad de medida')(noPreparadoData.value.unidad_medida),
+      validateRIF(noPreparadoData.value.Rif)
+    ].every(result => result === true);
+
+    if (!inventoryFieldsValid) return;
   }
+
+  // Validar imagen solo para nuevos productos
+  if (!isEditing.value && !validateImage(product.value.img)) {
+    localErrors.value.img = validateImage(product.value.img);
+    return;
+  }
+
+  emit('submit', {
+    ...product.value,
+    ...(product.value.tipo_producto === 'noPreparado' ? noPreparadoData.value : {}),
+    ...(product.value.tipo_producto === 'preparado' ? preparadoData.value : {})
+  });
 }
 
 function resetForm() {
@@ -240,7 +227,7 @@ function resetForm() {
   };
 
   preparadoData.value = {
-    descr_preparado: ''
+    descr: ''
   };
 
   imagePreview.value = null;
@@ -257,41 +244,19 @@ function close() {
   localErrors.value = {};
 }
 
-// Validaciones
-function validatePrice(value) {
-  if (!value) return 'Precio es requerido';
-  const num = parseFloat(value);
-  if (isNaN(num)) return 'Precio debe ser un número válido';
-  if (num <= 0) return 'Precio debe ser mayor a 0';
-  return true;
-}
-
-function validateCode(value) {
-  if (!value) return 'Código es requerido';
-  if (value.length < 3) return 'Código debe tener al menos 3 caracteres';
-  if (value.length > 20) return 'Código debe tener máximo 20 caracteres';
-  return true;
-}
-
-function validatePositiveNumber(value, fieldName) {
-  if (!value) return `${fieldName} es requerido`;
-  const num = parseFloat(value);
-  if (isNaN(num)) return `${fieldName} debe ser un número válido`;
-  if (num < 0) return `${fieldName} debe ser mayor o igual a 0`;
-  return true;
-}
-
-function validateMinQuantity(value) {
-  return validatePositiveNumber(value, 'Cantidad mínima');
-}
-
-function validateCost(value) {
-  if (!value) return 'Costo de compra es requerido';
-  const num = parseFloat(value);
-  if (isNaN(num)) return 'Costo debe ser un número válido';
-  if (num <= 0) return 'Costo debe ser mayor a 0';
-  return true;
-}
+const validationRules = {
+  cod_producto: [validateCode],
+  nombre: [validateRequired('Nombre')],
+  precio_usd: [validatePrice],
+  id_categoria: [validateRequired('Categoría')],
+  img: [validateImage],
+  cant_min: [validateMinQuantity],
+  cant_actual: [validatePositiveNumber('Cantidad actual')],
+  costo_compra: [validateCost],
+  unidad_medida: [validateRequired('Unidad de medida')],
+  Rif: [validateRIF],
+  descr: []
+};
 </script>
 
 <template>
@@ -349,7 +314,7 @@ function validateCost(value) {
                   v-model="product.cod_producto"
                   label="Código del producto"
                   required
-                  :rules="[validateCode]"
+                  :rules="validationRules.cod_producto"
                   :error-messages="localErrors.cod_producto"
                   hint="Código único identificador del producto"
                   persistent-hint
@@ -363,7 +328,7 @@ function validateCost(value) {
                   v-model="product.nombre"
                   label="Nombre del producto"
                   required
-                  :rules="[v => !!v || 'Nombre es requerido']"
+                  :rules="validationRules.nombre"
                   :error-messages="localErrors.nombre"
                   prepend-inner-icon="mdi-tag"
                 />
@@ -379,7 +344,7 @@ function validateCost(value) {
                   step="0.01"
                   min="0"
                   required
-                  :rules="[validatePrice]"
+                  :rules="validationRules.precio_usd"
                   :error-messages="localErrors.precio_usd"
                   prefix="$"
                   hint="Precio de venta del producto"
@@ -403,7 +368,7 @@ function validateCost(value) {
                   persistent-hint
                   prepend-inner-icon="mdi-shape"
                   required
-                  :rules="[v => !!v || 'Categoría es requerida']"
+                  :rules="validationRules.id_categoria"
                 >
                   <template v-slot:item="{ props, item }">
                     <v-list-item
@@ -440,7 +405,7 @@ function validateCost(value) {
                   type="number"
                   min="0"
                   required
-                  :rules="[validateMinQuantity]"
+                  :rules="validationRules.cant_min"
                   :error-messages="localErrors.cant_min"
                   hint="Stock mínimo requerido"
                   persistent-hint
@@ -454,7 +419,7 @@ function validateCost(value) {
                   label="Cantidad actual"
                   type="number"
                   min="0"
-                  :rules="[v => validatePositiveNumber(v, 'Cantidad actual')]"
+                  :rules="validationRules.cant_actual"
                   :error-messages="localErrors.cant_actual"
                   hint="Stock actual disponible"
                   persistent-hint
@@ -465,7 +430,7 @@ function validateCost(value) {
               <v-col cols="12" md="4">
                 <v-select
                   v-model="noPreparadoData.unidad_medida"
-                  :items="unidadesMedida"
+                  :items="UNIDADES_MEDIDAS"
                   label="Unidad de medida"
                   required
                   :error-messages="localErrors.unidad_medida"
@@ -485,7 +450,7 @@ function validateCost(value) {
                   step="0.01"
                   min="0"
                   required
-                  :rules="[validateCost]"
+                  :rules="validationRules.costo_compra"
                   :error-messages="localErrors.costo_compra"
                   prefix="$"
                   hint="Costo unitario de compra"
@@ -516,9 +481,9 @@ function validateCost(value) {
             </h3>
 
             <v-textarea
-              v-model="preparadoData.descr_preparado"
+              v-model="preparadoData.descr"
               label="Descripción del producto"
-              :error-messages="localErrors.descr_preparado"
+              :error-messages="localErrors.descr"
               hint="Describe el producto preparado, ingredientes, etc."
               persistent-hint
               prepend-inner-icon="mdi-text"

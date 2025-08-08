@@ -66,3 +66,14 @@ export const DEPARTAMENTOS: string[] = [
     'Vicerrectorado',
     'Seguros Mercantil',
 ];
+
+export const UNIDADES_MEDIDAS = [
+  'unidad',
+  'kg',
+  'gramos',
+  'litros',
+  'mililitros',
+  'piezas',
+  'metros',
+  'centímetros'
+];

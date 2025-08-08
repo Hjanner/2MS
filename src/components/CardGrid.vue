@@ -5,7 +5,11 @@
 </script>
 
 <template>
-  <v-container fluid>
+  <v-container
+    class="bg-grey-lighten-3"
+    fluid
+    min-height="100%"
+  >
     <v-row>
       <v-col
         v-for="(item, key) in items"

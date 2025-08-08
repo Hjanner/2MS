@@ -1,15 +1,15 @@
 <script setup>
-import { useSnackbar } from '@/composables/useSnackbar';
+  import { useSnackbar } from '@/composables/useSnackbar'
 
-const { snackbar } = useSnackbar();
+  const { snackbar } = useSnackbar()
 </script>
 
 <template>
   <v-app>
+    <Appbar />
     <Sidebar />
     <v-main>
       <router-view />
-       <!-- Snackbar para notificaciones -->
       <v-snackbar
         v-model="snackbar.show"
         :color="snackbar.color"

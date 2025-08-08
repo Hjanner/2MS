@@ -5,6 +5,6 @@
         @click="$router.push('/')"
     >
         <v-icon left>mdi-arrow-left</v-icon>
-        Volver al inicio
+        Ir al inicio
     </v-btn>
 </template>

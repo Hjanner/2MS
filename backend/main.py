@@ -58,5 +58,4 @@ app.include_router(productos_preparados_router)
 app.include_router(productos_noPreparados_router)
 
 app.include_router(api_utils_router)
-
 app.include_router(vista_router)

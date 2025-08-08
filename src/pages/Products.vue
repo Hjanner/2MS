@@ -32,15 +32,12 @@ async function fetchCategorias() {
 async function fetchProducts() {
   loading.value = true;
   try {
-    const response = await api.get('/productos');
-    // Mapear productos y añadir nombre de categoría    
-    productos.value = response.data.map(producto => {
-      const categoria = categorias.value.find(c => c.id_categoria === producto.id_categoria);
-      return {
-        ...producto,
-        nombre_categoria: categoria ? categoria.descr : 'Sin categoría'
-      };
-    });    
+    const response = await api.get('/vista/productos-completos');
+    productos.value = response.data.map(producto => ({
+      ...producto,
+      nombre_categoria: producto.categoria_descr
+    }));
+    filteredProductos.value = productos.value;
   } catch (error) {
     const message = error.response?.data?.message || 'Error al cargar los productos';
     showSnackbar(message, 'error');
@@ -53,45 +50,53 @@ async function handleAddProduct(productData) {
   addingProduct.value = true;
   addProductErrors.value = {};
   
+  console.log('producto a agregar', productData);
+
   try {
-    await api.post('/productos', productData);
+    let endpointTipo;
+    let productoBase;
+    let productoTipo;
+
+    // Determinar endpoint según el tipo de producto
+    if (productData.tipo_producto === 'noPreparado') {
+      endpointTipo = '/productos_noPreparados';
+      productoBase = {
+        cod_producto: productData.cod_producto,
+        nombre: productData.nombre,
+        precio_usd: productData.precio_usd,
+        img: productData.img,
+        id_categoria: productData.id_categoria,
+      };
+      productoTipo = {
+        cod_producto_noPreparado: productData.cod_producto,
+        cant_min: productData.cant_min,
+        cant_actual: productData.cant_actual,
+        costo_compra: productData.costo_compra,
+        unidad_medida: productData.unidad_medida,
+        Rif: productData.Rif || null
+      };
+    } else {
+      endpointTipo = '/productos_preparados';
+      productoBase = {
+        cod_producto: productData.cod_producto,
+        nombre: productData.nombre,
+        precio_usd: productData.precio_usd,
+        img: productData.img,
+        id_categoria: productData.id_categoria,
+      };
+      productoTipo = {
+        cod_producto_preparado: productData.cod_producto,
+        descr: productData.descr || null
+      };
+    }
+
+    await api.post('/productos', productoBase);
+    await api.post(endpointTipo, productoTipo);
     await fetchProducts();
     showAddDialog.value = false;
-    showSnackbar('Producto agregado correctamente', 'success');
-  } catch (error) {    
-    if (error.response) {
-      // console.log('Status:', error.response.status);
-      // console.log('Data:', error.response.data);
-      const backendErrors = {};
-
-      if (error.response?.data?.detail) {
-        const errorDetail = error.response.data.detail;
-
-        if (Array.isArray(errorDetail)) {   // en caso de multiples errores
-          errorDetail.forEach(err => {
-            if (err.loc && err.loc.length > 1) {
-              backendErrors[err.loc[1]] = err.msg;
-              }
-          });
-        }
-        else if (typeof errorDetail === 'object' && errorDetail.field) {
-          backendErrors[errorDetail.field] = errorDetail.message;
-        }
-
-        addProductErrors.value = backendErrors;
-        const errorMessages = Object.values(backendErrors).join(', ');
-        showSnackbar(errorMessages || 'Ocurrió un error inesperado.', 'error');
-      } else {
-        const message = error.response.data?.message || `Error del servidor: ${error.response.status}`;
-        showSnackbar(message, 'error');
-      }
-    } else if (error.request) {
-      console.log('Error de red:', error.request);
-      showSnackbar('Error de conexión con el servidor', 'error');
-    } else {
-      console.log('Error:', error.message);
-      showSnackbar('Error inesperado: ' + error.message, 'error');
-    }
+    showSnackbar(`Producto ${productData.tipo_producto === 'noPreparado' ? 'no preparado' : 'preparado'} agregado correctamente`, 'success');
+  } catch (error) {
+    handleApiError(error, addProductErrors);
   } finally {
     addingProduct.value = false;
   }
@@ -100,28 +105,43 @@ async function handleAddProduct(productData) {
 async function handlerEditProduct(productData) {
   editingProduct.value = true;
   editProductErrors.value = {};
+  
   try {
-    await api.put(`/productos/${currentProduct.value.cod_producto}`, productData);
+    let endpoint = `/productos/${currentProduct.value.cod_producto}`;
+    let dataToSend = productData;
+
+    // Determinar endpoint según el tipo de producto
+    if (productData.tipo_producto === 'noPreparado') {
+      endpoint = `/productos_noPreparados/${currentProduct.value.cod_producto}`;
+      dataToSend = {
+        nombre: productData.nombre,
+        precio_usd: productData.precio_usd,
+        img: productData.img,
+        id_categoria: productData.id_categoria,
+        cant_min: productData.cant_min,
+        cant_actual: productData.cant_actual,
+        costo_compra: productData.costo_compra,
+        unidad_medida: productData.unidad_medida,
+        Rif: productData.Rif || null
+      };
+    } else {
+      // Para productos preparados
+      dataToSend = {
+        nombre: productData.nombre,
+        precio_usd: productData.precio_usd,
+        img: productData.img,
+        id_categoria: productData.id_categoria,
+        descr_preparado: productData.descr_preparado || null
+      };
+    }
+
+    await api.put(endpoint, dataToSend);
     await fetchProducts();
     showEditDialog.value = false;
     currentProduct.value = null;
-    showSnackbar('Producto editado correctamente', 'success');
+    showSnackbar(`Producto ${productData.tipo_producto === 'noPreparado' ? 'no preparado' : 'preparado'} editado correctamente`, 'success');
   } catch (error) {
-    console.log('este es el error que me da', error);
-    
-    if (Array.isArray(error.response.data.detail)) {
-      // Parse validation errors
-      const backendErrors = {};
-      for (const err of error.response.data.detail) {
-        if (err.loc && err.loc.length > 1) {
-          backendErrors[err.loc[1]] = err.msg;
-        }
-      }
-      editProductErrors.value = backendErrors;
-    } else {
-      const message = error.response?.data?.message || 'Error al editar el producto';
-      showSnackbar(message, 'error');
-    }
+    handleApiError(error, editProductErrors);
   } finally {
     editingProduct.value = false;
   }
@@ -132,9 +152,20 @@ function handleEditClick(producto) {
   showEditDialog.value = true;
 }
 
-// Manejar los datos filtrados del componente de búsqueda
 function handleFilteredData(filtered) {
   filteredProductos.value = filtered;
+}
+
+// Cerrar diálogos y limpiar errores
+function closeAddDialog() {
+  showAddDialog.value = false;
+  addProductErrors.value = {};
+}
+
+function closeEditDialog() {
+  showEditDialog.value = false;
+  editProductErrors.value = {};
+  currentProduct.value = null;
 }
 
 onMounted(async () => {
@@ -152,7 +183,28 @@ onMounted(async () => {
           
           <v-card>
             <v-card-title class="d-flex justify-space-between align-center">
-              <span>Gestión de Productos</span>
+              <div>
+                <span class="text-h5">Gestión de Productos</span>
+                <div class="text-subtitle-1 mt-2">
+                  <v-chip 
+                    color="blue" 
+                    variant="outlined" 
+                    size="small" 
+                    class="me-2"
+                  >
+                    <v-icon start>mdi-package-variant</v-icon>
+                    No Preparados: {{ productos.filter(p => p.tipo_producto === 'noPreparado').length }}
+                  </v-chip>
+                  <v-chip 
+                    color="orange" 
+                    variant="outlined" 
+                    size="small"
+                  >
+                    <v-icon start>mdi-chef-hat</v-icon>
+                    Preparados: {{ productos.filter(p => p.tipo_producto === 'preparado').length }}
+                  </v-chip>
+                </div>
+              </div>
               <v-btn
                 color="primary"
                 @click="showAddDialog = true"
@@ -166,12 +218,11 @@ onMounted(async () => {
                 <!-- Componente de búsqueda -->
                 <SearchFilter
                   :data="productos"
-                  :search-fields="['nombre', 'precio_usd', 'nombre_categoria']"
-                  placeholder="Buscar productos por nombre, precio o categoría..."
+                  :search-fields="['nombre', 'precio_usd', 'nombre_categoria', 'cod_producto', 'tipo_producto']"
+                  placeholder="Buscar productos por nombre, precio, categoría, código o tipo..."
                   :show-field-filter="true"
                   result-text="productos"
                   @filtered="handleFilteredData"
-                  @search="handleSearch"
                 />
 
                 <product-list 
@@ -195,8 +246,9 @@ onMounted(async () => {
       title="Agregar Nuevo Producto"
       :categorias="categorias"
       :errors="addProductErrors"
+      mode="add"
       @submit="handleAddProduct"
-      @update:show="(val) => { showAddDialog = val; if (!val) addProductErrors.value = {}; }"
+      @update:show="closeAddDialog"
     />
 
     <!-- Edit Product Dialog -->
@@ -207,8 +259,9 @@ onMounted(async () => {
       :categorias="categorias"
       title="Editar Producto"
       :errors="editProductErrors"
+      mode="edit"
       @submit="handlerEditProduct"
-      @update:show="(val) => { showEditDialog = val; if (!val) editProductErrors.value = {}; }"
+      @update:show="closeEditDialog"
     />      
 </div>
 </template>

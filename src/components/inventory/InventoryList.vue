@@ -5,6 +5,8 @@ import ProductDetailRow from '@/components/product/ProductDetailRow.vue';
 import ProductForm from '@/components/product/ProductForm.vue';
 import LowStockAlert from '@/components/inventory/LowStockAlert.vue';
 import InventoryMetrics from '@/components/inventory/InventoryMetrics.vue';
+import { formatCurrency, getStockColor, getStockStatus } from '@/utils/formatters';
+
 
 const props = defineProps({
   productos: {
@@ -17,7 +19,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['refresh']);
+const emit = defineEmits(['refresh', 'edit']);
 
 const expandedItems = ref([]);
 
@@ -35,35 +37,10 @@ const valorTotalInventario = computed(() => {
     .reduce((total, p) => total + (p.cant_actual * p.costo_compra), 0);
 });
 
-// Función para determinar color del stock
-function getStockColor(producto) {
-  if (producto.tipo_producto === 'preparado') return 'grey';
-  if (producto.cant_actual <= 0) return 'red';
-  if (producto.cant_actual <= producto.cant_min) return 'orange';
-  return 'green';
-}
-
-// Función para determinar el estado del stock
-function getStockStatus(producto) {
-  if (producto.tipo_producto === 'preparado') return 'N/A';
-  if (producto.cant_actual <= 0) return 'Sin stock';
-  if (producto.cant_actual <= producto.cant_min) return 'Stock bajo';
-  return 'Disponible';
-}
-
-// Función para formatear moneda
-function formatCurrency(amount) {
-  return new Intl.NumberFormat('es-VE', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2
-  }).format(amount);
-}
-
 // Headers para la tabla
 const headers = [
-  // { title: 'Imagen', key: 'img', sortable: false, width: '80px' },
-  { title: 'Código', key: 'cod_producto', sortable: true },
+  { title: 'Imagen', key: 'img', sortable: false, width: '80px' },
+  // { title: 'Código', key: 'cod_producto', sortable: true },
   { title: 'Nombre', key: 'nombre', sortable: true },
   { title: 'Categoría', key: 'categoria_descr', sortable: true },
   { title: 'Tipo', key: 'tipo_producto', sortable: true},
@@ -72,6 +49,10 @@ const headers = [
   { title: 'Estado', key: 'status', sortable: false },
   { title: 'Acciones', key: 'actions', sortable: false, width: '120px' }
 ];
+
+function editProduct(producto) {
+  emit('edit', producto);
+}
 </script>
 
 <template>
@@ -171,6 +152,18 @@ const headers = [
       <!-- Columna de acciones -->
       <template v-slot:item.actions="{ item }">
         <v-btn-group variant="text" density="compact" class="btn-action">
+          <v-tooltip text="Editar producto">
+            <template v-slot:activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon="mdi-pencil"
+                size="small"
+                color="primary"
+                @click="editProduct(item)"
+              />
+            </template>
+          </v-tooltip>
+
           <v-tooltip text="Ver detalles">
             <template v-slot:activator="{ props }">
               <v-btn
@@ -240,6 +233,6 @@ const headers = [
 }
 
 .btn-action{
-  gap: 1rem;
+  gap: 0.75rem;
 }
 </style>
