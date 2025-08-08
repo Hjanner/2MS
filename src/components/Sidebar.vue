@@ -33,7 +33,7 @@
         prepend-icon="mdi-account-group"
         title="Clientes"
         value="clients"
-        to="/client/clients"
+        to="/clients"
       />
     </v-list>
 
@@ -43,7 +43,17 @@
         prepend-icon="mdi-food-variant"
         title="Productos"
         value="products"
-        to="/product/products"
+        to="/products"
+      />
+    </v-list>
+
+    <v-list nav>
+      <v-list-item
+        link
+        prepend-icon="mdi-clipboard-list-outline"
+        title="Inventario"
+        value="inventory"
+        to="/inventory"
       />
     </v-list>
   </v-navigation-drawer>

@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from backend.routes.pydolarve_routers import api_utils_router
+from backend.routes.view_routers import router as vista_router
 
 import backend.utilities.apscheduler as scheduler_config
 from contextlib import asynccontextmanager
@@ -55,4 +56,7 @@ app.include_router(inventarios_router)
 app.include_router(detalle_venta_router)
 app.include_router(productos_preparados_router)
 app.include_router(productos_noPreparados_router)
+
 app.include_router(api_utils_router)
+
+app.include_router(vista_router)

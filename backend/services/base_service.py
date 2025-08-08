@@ -265,3 +265,4 @@ class BaseService:
             )
             conn.commit()
             return cursor.rowcount > 0 
+        

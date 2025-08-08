@@ -91,8 +91,8 @@ class ProductoPreparadoValidators:
 class ProductoNoPreparadoValidators:
     @field_validator('cant_min', 'cant_actual', 'costo_compra')
     @classmethod
-    def validate_numericos(cls, v, field):
-        return validate_non_negative_number(v, field.name)
+    def validate_numericos(cls, v, info):
+        return validate_non_negative_number(v, info.field_name)
 
     @field_validator('unidad_medida')
     @classmethod
@@ -138,5 +138,5 @@ class InventarioValidators:
 class DetalleVentaValidators:
     @field_validator('cantidad_producto', 'precio_unitario')
     @classmethod
-    def validate_detalle(cls, v, field):
-        return validate_positive_number(v, field.name)
+    def validate_detalle(cls, v, info):
+        return validate_positive_number(v, info.field_name)

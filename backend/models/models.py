@@ -163,7 +163,7 @@ class ProductoPreparado(BaseModel, ProductoPreparadoValidators):
 class ProductoNoPreparado(BaseModel, ProductoNoPreparadoValidators):
     """
     Modelo para la tabla 'Productos_noPreparados' .
-    Extiende la información de un producto si no es preparado (inventariable).
+Extiende la información de un producto si no es preparado (inventariable).
     """
     cod_producto_noPreparado: str = Field(..., description="Código del producto no preparado (clave primaria y foránea)")
     cant_min: int = Field(..., description="Cantidad mínima en inventario para alerta")

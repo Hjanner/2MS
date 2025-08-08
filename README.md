@@ -32,6 +32,10 @@ python database/insert_db.py
 python database/triggers_db.py
 ```
 
+```bash
+python database/views_db.py   
+```
+
 # Ejecución
 Inicia el servidor FastAPI:
 
