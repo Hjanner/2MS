@@ -3,8 +3,6 @@
   import { useRoute } from 'vue-router'
   import { useFetch } from '@/composables/useFetch.js'
   import { useSearchTerm } from '@/composables/useSearchTerm.js'
-  import SearchFilter from '@/components/common/SearchFilter.vue'; 
-
 
   const { data, error } = useFetch('http://127.0.0.1:8000/dolar')
   const tasa = computed(() => data.value?.valor_usd_bs || '')
@@ -21,7 +19,7 @@
   >
     <template #prepend>
       <span class="text-h6 ">
-        2MS
+        Sistema 2MS
       </span>
 
       <template v-if="route.path === '/'">

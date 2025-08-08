@@ -27,10 +27,14 @@
         prepend-icon="mdi-cart"
         title="Productos"
         to="/Products"
+        to="/Products"
       />
 
       <v-list-item
         link
+        prepend-icon="mdi-account-group"
+        title="Clientes"
+        to="/Clients"
         prepend-icon="mdi-account-group"
         title="Clientes"
         to="/Clients"

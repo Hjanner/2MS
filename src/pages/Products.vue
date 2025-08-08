@@ -1,11 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useSnackbar } from '@/composables/useSnackbar';
+import { useSnackbar } from '@/composables/useSnackbar.js';
 import ProductList from '@/components/product/ProductList.vue';
 import ProductForm from '@/components/product/ProductForm.vue';
 import SearchFilter from '@/components/common/SearchFilter.vue'; 
 import BacktoHome from '@/components/common/BacktoHome.vue';
-import api from '@/api/api';
+import api from '@/api/api.js';
 
 const productos = ref([]);
 const filteredProductos = ref([]);
