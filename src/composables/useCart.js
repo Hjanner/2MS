@@ -48,7 +48,7 @@ export function useCart () {
     let total = 0
 
     for (const key in cart) {
-      total += cart[key].price * cart[key].quantity
+      total += getItemTotal(key)
     }
 
     return total
