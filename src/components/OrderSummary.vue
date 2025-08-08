@@ -13,18 +13,24 @@
     location="right"
     :width="500"
   >
-    <v-list>
+    <v-list nav>
       <v-list-item
         v-for="(item, key) in selectedItems"
         :key
+        :class="key % 2 === 0 ? 'bg-grey-lighten-3' : ''"
+        density="compact"
         lines="two"
       >
         <template #subtitle>
-          USD {{ cartActions.getItemTotal(item.cod_producto).toFixed(2) }}
+          <span class="text-subtitle-2">
+            USD {{ cartActions.getItemTotal(item.cod_producto).toFixed(2) }}
+          </span>
         </template>
 
         <template #title>
-          {{ item.nombre }}
+          <span class="text-subtitle-2">
+            {{ item.nombre }}
+          </span>
         </template>
 
         <template #prepend>
@@ -40,6 +46,7 @@
             v-model="cartActions.createItemQuantityModel(item.cod_producto).value"
             control-variant="stacked"
             density="compact"
+            hide-details
             :min="1"
             variant="outlined"
             width="80"
