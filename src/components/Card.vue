@@ -28,7 +28,7 @@
       </v-card-title>
 
       <v-card-subtitle>
-        <b>Bs. {{ item.precio_usd }}</b>
+        <b>USD {{ item.precio_usd }}</b>
       </v-card-subtitle>
     </v-card-item>
   </v-card>
