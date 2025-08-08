@@ -4,34 +4,15 @@
   import { useFetch } from '@/composables/useFetch.js'
   import { useSearchTerm } from '@/composables/useSearchTerm.js'
 
-  /**
-   * @typedef {object} FetchResult
-   * @property {Array<Object>} data
-   * @property {string|null} error
-   */
-
-  /** @type {FetchResult} */
   const { data, error } = useFetch('http://127.0.0.1:8000/productos/')
 
-  /**
-   * @typedef {object} Producto
-   * @property {string} cod_producto
-   * @property {string} nombre
-   * @property {number} precio_usd
-   * @property {number} id_categoria
-   * @property {string} img
-   */
-
-  /** @type {import('vue').ComputedRef<Producto[]>} */
   const items = computed(() => data.value || [])
 
-  const { searchTerm, clearSearchTerm } = useSearchTerm()
+  const { matchesSearchTerm, clearSearchTerm } = useSearchTerm()
 
-  const filteredItems = computed(() => {
-    const searchTermString = searchTerm.value.toString().toLowerCase() || ''
-
-    return items.value.filter(i => i.nombre.toString().toLowerCase().includes(searchTermString))
-  })
+  const filteredItems = computed(() =>
+    items.value.filter(i => matchesSearchTerm(i.nombre)),
+  )
 
   const {
     getCart,
@@ -39,8 +20,8 @@
     addItem,
     removeItem,
     createItemQuantityModel,
-    getItemSubtotal,
-    getTotalPrice,
+    getItemTotal,
+    getCartTotal,
   } = useCart()
 
   provide('cartActions', {
@@ -49,8 +30,8 @@
     addItem,
     removeItem,
     createItemQuantityModel,
-    getItemSubtotal,
-    getTotalPrice,
+    getItemTotal,
+    getCartTotal,
   })
 
   const selectedItems = computed(() =>

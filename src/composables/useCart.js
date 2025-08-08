@@ -42,9 +42,9 @@ export function useCart () {
     })
   }
 
-  const getItemSubtotal = itemId => cart[itemId].price * cart[itemId].quantity
+  const getItemTotal = itemId => cart[itemId].price * cart[itemId].quantity
 
-  const getTotalPrice = () => {
+  const getCartTotal = () => {
     let total = 0
 
     for (const key in cart) {
@@ -60,7 +60,7 @@ export function useCart () {
     addItem,
     removeItem,
     createItemQuantityModel,
-    getItemSubtotal,
-    getTotalPrice,
+    getItemTotal,
+    getCartTotal,
   }
 }
