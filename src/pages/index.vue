@@ -1,72 +1,79 @@
 <script setup>
-  import { computed, provide } from 'vue'
-  import { useRouter } from 'vue-router'    //para rutas
+  import { computed, onUnmounted, provide } from 'vue'
   import { useCart } from '@/composables/useCart.js'
   import { useFetch } from '@/composables/useFetch.js'
+  import { useSearchTerm } from '@/composables/useSearchTerm.js'
 
-  const router = useRouter()
-  const { data, error } = useFetch('https://boringapi.com/api/v1/photos/random?num=10')
-  const items = computed(() => data.value?.photos || [])
+  /**
+   * @typedef {object} FetchResult
+   * @property {Array<Object>} data
+   * @property {string|null} error
+   */
 
-  const { cart, addItem, removeItem, updateQuantity } = useCart()
-  provide('cartActions', { cart, addItem, removeItem, updateQuantity })
+  /** @type {FetchResult} */
+  const { data, error } = useFetch('http://127.0.0.1:8000/productos/')
+
+  /**
+   * @typedef {object} Producto
+   * @property {string} cod_producto
+   * @property {string} nombre
+   * @property {number} precio
+   * @property {number} id_categoria
+   */
+
+  /** @type {import('vue').ComputedRef<Producto[]>} */
+  const items = computed(() => data.value || [])
+
+  const { searchTerm, clearSearchTerm } = useSearchTerm()
+
+  const filteredItems = computed(() => {
+    const searchTermString = searchTerm.value.toString().toLowerCase() || ''
+
+    return items.value.filter(i => i.nombre.toString().toLowerCase().includes(searchTermString))
+  })
+
+  const {
+    getCart,
+    clearCart,
+    addItem,
+    removeItem,
+    createItemQuantityModel,
+    getItemSubtotal,
+    getTotalPrice,
+  } = useCart()
+
+  provide('cartActions', {
+    getCart,
+    clearCart,
+    addItem,
+    removeItem,
+    createItemQuantityModel,
+    getItemSubtotal,
+    getTotalPrice,
+  })
 
   const selectedItems = computed(() =>
-    items.value
-      .filter(i => cart[i.id])
-      .map(i => ({ id: i.id, name: i.title, quantity: cart[i.id].quantity })),
+    items.value.filter(i => i.cod_producto in getCart()),
   )
 
-  function navigateToClients() {
-    router.push('/client/clients')
-  }
-
-  function navigateToProducts() {
-    router.push('/product/products')
-  }
+  onUnmounted(() => {
+    clearSearchTerm()
+    clearCart()
+  })
 </script>
 
 <template>
-  <div class="home-page">
-    <div class="d-flex justify-end mb-4">
-      <v-btn
-        color="primary"
-        @click="navigateToClients"
-        class="mr-2"
-      >
-        <v-icon left>mdi-account-group</v-icon>
-        Manage Clients
-      </v-btn>
-      <v-btn
-        color="primary"
-        @click="navigateToProducts"
-        class="mr-2"
-      >
-        <v-icon left>mdi-account-group</v-icon>
-        Productos
-      </v-btn>
-    </div>
+  <template v-if="error">
+    Error
+  </template>
 
-    <template v-if="error">
-      <v-alert type="error">
-        Error loading content
-      </v-alert>
-    </template>
+  <template v-else-if="items.length > 0">
+    <CardGrid :items="filteredItems" />
+  </template>
 
-    <template v-else-if="items.length > 0">
-      <CardGrid :items />
-    </template>
+  <template v-else>
+    <SkeletonGrid />
+  </template>
 
-    <template v-else>
-      <SkeletonGrid />
-    </template>
-
-    <Cart :selected-items="selectedItems" />
-  </div>
+  <OrderSummary :selected-items="selectedItems" />
 </template>
-
-<style scoped>
-  .home-page {
-    padding: 20px;
-  }
-</style>

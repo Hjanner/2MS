@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    Appbar: typeof import('./src/components/Appbar.vue')['default']
     BacktoHome: typeof import('./src/components/common/BacktoHome.vue')['default']
     Card: typeof import('./src/components/Card.vue')['default']
     CardGrid: typeof import('./src/components/CardGrid.vue')['default']
@@ -18,6 +19,7 @@ declare module 'vue' {
     ClientForm: typeof import('./src/components/client/ClientForm.vue')['default']
     ClientList: typeof import('./src/components/client/ClientList.vue')['default']
     Example: typeof import('./src/components/example.vue')['default']
+    OrderSummary: typeof import('./src/components/OrderSummary.vue')['default']
     ProductDelete: typeof import('./src/components/product/ProductDelete.vue')['default']
     ProductForm: typeof import('./src/components/product/ProductForm.vue')['default']
     ProductList: typeof import('./src/components/product/ProductList.vue')['default']

@@ -1,12 +1,12 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useSnackbar } from '@/composables/useSnackbar';
+import { useSnackbar } from '@/composables/useSnackbar.js';
 import ClientList from '@/components/client/ClientList.vue';
 import ClientForm from '@/components/client/ClientForm.vue';
 import ClientDelete from '@/components/client/ClientDelete.vue';
 import SearchFilter from '@/components/common/SearchFilter.vue'; 
 import BacktoHome from '@/components/common/BacktoHome.vue';
-import api from '@/api/api';
+import api from '@/api/api.js';
 
 const clientes = ref([]);
 const filteredClientes = ref([]);

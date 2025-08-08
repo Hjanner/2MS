@@ -7,22 +7,26 @@
     expand-on-hover
     rail
   >
-    <v-list>
-      <v-list-item
-        prepend-icon="mdi-alpha-m-box"
-        subtitle="Sistema de gestión"
-        title="MS2"
-      />
-    </v-list>
-
-    <v-divider />
-
     <v-list nav>
       <v-list-item
         link
         prepend-icon="mdi-home"
         title="Inicio"
-        value="inicio"
+        to="/"
+      />
+
+      <v-list-item
+        link
+        prepend-icon="mdi-cart"
+        title="Productos"
+        to="/Products"
+      />
+
+      <v-list-item
+        link
+        prepend-icon="mdi-account-group"
+        title="Clientes"
+        to="/Clients"
       />
     </v-list>
   </v-navigation-drawer>

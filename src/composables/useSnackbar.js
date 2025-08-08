@@ -1,22 +1,22 @@
-import { ref } from 'vue';
+import { ref } from 'vue'
 
 const snackbar = ref({
-    show: false,
-    message: '',
-    color: 'success'
-  });
-  
-export function useSnackbar() {
-  function showSnackbar(message, color = 'success') {
+  show: false,
+  message: '',
+  color: 'success',
+})
+
+export function useSnackbar () {
+  function showSnackbar (message, color = 'success') {
     snackbar.value = {
       show: true,
       message,
-      color
-    };
+      color,
+    }
   }
 
   return {
     snackbar,
-    showSnackbar
-  };
+    showSnackbar,
+  }
 }
