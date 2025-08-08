@@ -1,4 +1,6 @@
 <script>
+import ReloadButton from '@/components/common/ReloadButton.vue';
+
 export default {
   name: 'ClientList',
   props: {
@@ -69,15 +71,7 @@ export default {
       </template>
     </v-data-table>
 
-    <div class="d-flex justify-end mt-4">
-      <v-btn
-        @click="$emit('refresh')"
-        :loading="loading"
-      >
-        <v-icon left>mdi-refresh</v-icon>
-        Recargar Lista
-      </v-btn>
-    </div>
+    <ReloadButton @click="$emit('refresh')" />
   </div>
 </template>
 

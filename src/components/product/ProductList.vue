@@ -21,7 +21,7 @@ export default {
       headers: [
         // { title: 'Código Producto', key: 'cod_producto', sortable: false },
         { title: 'Nombre', key: 'nombre' },
-        { title: 'Precio', key: 'precio', sortable: true },
+        { title: 'Precio', key: 'precio_usd', sortable: true },
         { title: 'Categoría', key: 'nombre_categoria', },
         { title: 'Acciones', key: 'actions', sortable: false },
       ],
@@ -65,8 +65,8 @@ export default {
       class="elevation-1"
     >
       <!-- Custom slot para formatear el precio -->
-      <template v-slot:item.precio="{ item }">
-        {{ formatPrice(item.precio) }}
+      <template v-slot:item.precio_usd="{ item }">
+        {{ formatPrice(item.precio_usd) }}
       </template>
 
       <!-- Custom slot para mostrar ID de categoría -->

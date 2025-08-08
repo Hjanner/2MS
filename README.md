@@ -20,9 +20,21 @@ Instala las dependencias:
 pip install -r requirements.txt
 
 # crear y llenar base de datos, con datos beta
+```bash
 python database/create_db.py
+```
 
+```bash
 python database/insert_db.py
+```
+
+```bash
+python database/triggers_db.py
+```
+
+```bash
+python database/views_db.py   
+```
 
 # Ejecución
 Inicia el servidor FastAPI:

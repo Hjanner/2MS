@@ -1,6 +1,51 @@
+import os
 import sqlite3
 from typing import Type, List, Optional, Any, Dict
-from fastapi import HTTPException
+import uuid
+
+async def create_with_file(self, obj_in, file_field: str = 'img', upload_dir: str = 'public/uploads') -> Any:
+    """
+    Crea un registro con un archivo adjunto.
+    :param obj_in: Datos del objeto
+    :param file_field: Nombre del campo del archivo
+    :param upload_dir: Directorio donde guardar los archivos
+    :return: Datos del objeto creado
+    """
+    data = obj_in.model_dump(exclude={file_field})
+    file = getattr(obj_in, file_field, None)
+    
+    self._check_unique_constraints(data)        # Verificar restricciones de unicidad
+    
+    if file:                                        # Guardar archivo si existe
+        os.makedirs(upload_dir, exist_ok=True)
+        file_ext = os.path.splitext(file.filename)[1]
+        filename = f"{uuid.uuid4()}{file_ext}"
+        file_path = os.path.join(upload_dir, filename)
+        
+        with open(file_path, 'wb') as buffer:                                   # Guardar el archivo
+            buffer.write(await file.read())
+        
+        data[file_field] = f"/{upload_dir}/{filename}"
+    
+    fields = ', '.join(data.keys())                                         # Insertar en la base de datos
+    placeholders = ', '.join(['?'] * len(data))
+    values = tuple(data.values())
+    
+    try:
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                f"INSERT INTO {self.table_name} ({fields}) VALUES ({placeholders})",
+                values
+            )
+            conn.commit()
+            return data
+    except sqlite3.IntegrityError as e:
+        # Limpiar archivo subido si hubo error
+        if file and os.path.exists(file_path):
+            os.remove(file_path)
+        raise DuplicateKeyError("unknown", "unknown", str(e))
+
 
 class DuplicateKeyError(Exception):
     """Excepción personalizada para claves duplicadas."""
@@ -220,3 +265,4 @@ class BaseService:
             )
             conn.commit()
             return cursor.rowcount > 0 
+        

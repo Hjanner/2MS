@@ -1,15 +1,19 @@
-from fastapi import APIRouter, HTTPException
-from typing import Type, List, Dict, Any
-# from sqlalchemy.orm import Session
-# from sqlalchemy.exc import IntegrityError
+import inspect
+from fastapi import APIRouter, HTTPException, Form, File, UploadFile, Depends
+from typing import Any, Dict, Type, List, Optional, Union
 
+from backend.utilities.get_data import get_form_data_as_dict
 
 def create_crud_router(
     entity_name: str,
     controller,
     id_field: str,
     model: Type,
-    tag: str = None
+    tag: str = None,
+    *,
+    with_file_upload: bool = False,
+    file_field: str = 'img',
+    create_model: Optional[Type] = None
 ):
     """
     Fábrica de routers CRUD genéricos para FastAPI.
@@ -19,6 +23,9 @@ def create_crud_router(
     :param id_field: Nombre del campo clave primaria.
     :param model: Clase del modelo Pydantic.
     :param tag: Nombre del tag para la documentación (opcional).
+    :param: with_file_upload: Si True, añade endpoints para manejar archivos
+    :param: file_field: Nombre del campo que contendrá el archivo
+    :param: create_model: Modelo específico para creación (opcional)
     :return: APIRouter listo para incluir en la app.
     """
     router = APIRouter(prefix=f"/{entity_name}", tags=[tag or entity_name.capitalize()])
@@ -41,6 +48,65 @@ def create_crud_router(
         """Crea un nuevo registro de la entidad."""
         controller.create(obj_in)
         return {"mensaje": f"{entity_name.capitalize()} creado exitosamente"}
+    
+
+    if with_file_upload:
+        # Obtenemos los campos del modelo para crear los parámetros del Form
+        model_fields = {}
+        if create_model:
+            model_fields = create_model.__annotations__
+        else:
+            model_fields = model.__annotations__
+        
+        # Eliminamos el campo de archivo ya que lo manejamos por separado
+        form_fields = {k: v for k, v in model_fields.items() if k != file_field}
+        
+        # Creamos una dependencia dinámica para los campos del formulario
+        async def get_form_data(
+            **fields: Any  # Los campos se generarán dinámicamente
+        ):
+            return fields
+
+        # Generamos los parámetros del Form dinámicamente
+        form_parameters = []
+        for field_name, field_type in form_fields.items():
+            default = ... if field_name in model.__fields__ and model.__fields__[field_name].required else None
+            annotation = field_type if field_type != UploadFile else str
+            form_parameters.append(
+                inspect.Parameter(
+                    field_name,
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    annotation=Form(default) if annotation != File else File(default),
+                    default=default
+                )
+            )
+
+        # Actualizamos la firma de la función para incluir los campos dinámicos
+        original_signature = inspect.signature(get_form_data)
+        new_parameters = list(original_signature.parameters.values()) + form_parameters
+        get_form_data.__signature__ = original_signature.replace(parameters=new_parameters)
+
+        @router.post("/with-file", status_code=201)
+        async def create_with_file(
+            file: UploadFile = File(..., alias=file_field),
+            form_data: Dict[str, Any] = Depends(get_form_data)
+        ):
+            # Combina los datos del formulario con el archivo
+            data = {**form_data, file_field: file}
+            
+            if create_model:
+                obj_in = create_model(**data)
+            else:
+                obj_in = model(**data)
+                
+            if hasattr(controller, 'create_with_file'):
+                result = await controller.create_with_file(obj_in)
+            else:
+                result = controller.create(obj_in)
+                
+            return {"mensaje": f"{entity_name.capitalize()} creado con archivo", "data": result}
+
+        return router
 
     @router.put("/{item_id}", response_model=None)
     def update(item_id: str, obj_in: model):

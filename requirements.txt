@@ -7,3 +7,5 @@ httpx
 apscheduler
 pytz
 nest_asyncio
+os
+uuid

@@ -50,9 +50,5 @@
     {
         "name": "Detalle_Venta",
         "description": "Operaciones con Detalle de Venta"
-    },
-    {
-        "name": "Compra_Inventario",
-        "description": "Operaciones con Compra e Inventario"
     }
 ]
