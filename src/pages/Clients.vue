@@ -92,9 +92,7 @@ async function handlerEditClient(clientData) {
     showEditDialog.value = false;
     currentClient.value = null;
     showSnackbar('Cliente editado correctamente', 'success');
-  } catch (error) {
-    console.log('este es el error que me da', error);
-    
+  } catch (error) {    
     if (Array.isArray(error.response.data.detail)) {
       // Parse validation errors
       const backendErrors = {};

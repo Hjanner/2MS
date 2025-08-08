@@ -49,9 +49,6 @@ async function fetchProducts() {
 async function handleAddProduct(productData) {
   addingProduct.value = true;
   addProductErrors.value = {};
-  
-  console.log('producto a agregar', productData);
-
   try {
     let endpointTipo;
     let productoBase;
