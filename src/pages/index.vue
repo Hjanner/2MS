@@ -17,8 +17,9 @@
    * @typedef {object} Producto
    * @property {string} cod_producto
    * @property {string} nombre
-   * @property {number} precio
+   * @property {number} precio_usd
    * @property {number} id_categoria
+   * @property {string} img
    */
 
   /** @type {import('vue').ComputedRef<Producto[]>} */

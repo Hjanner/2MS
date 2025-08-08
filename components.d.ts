@@ -8,31 +8,26 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    Appbar: typeof import('./src/components/Appbar.vue')['default']
     BacktoHome: typeof import('./src/components/common/BacktoHome.vue')['default']
     Card: typeof import('./src/components/Card.vue')['default']
     CardGrid: typeof import('./src/components/CardGrid.vue')['default']
-    CardSkeleton: typeof import('./src/components/CardSkeleton.vue')['default']
-    Cart: typeof import('./src/components/Cart.vue')['default']
-    CartItem: typeof import('./src/components/CartItem.vue')['default']
     ClientDelete: typeof import('./src/components/client/ClientDelete.vue')['default']
     ClientForm: typeof import('./src/components/client/ClientForm.vue')['default']
     ClientList: typeof import('./src/components/client/ClientList.vue')['default']
-    Example: typeof import('./src/components/example.vue')['default']
     InventoryList: typeof import('./src/components/inventory/InventoryList.vue')['default']
     InventoryMetrics: typeof import('./src/components/inventory/InventoryMetrics.vue')['default']
     LowStockAlert: typeof import('./src/components/inventory/LowStockAlert.vue')['default']
-    ProductDelete: typeof import('./src/components/product/ProductDelete.vue')['default']
+    OrderSummary: typeof import('./src/components/OrderSummary.vue')['default']
     ProductDetailRow: typeof import('./src/components/product/ProductDetailRow.vue')['default']
     ProductForm: typeof import('./src/components/product/ProductForm.vue')['default']
     ProductList: typeof import('./src/components/product/ProductList.vue')['default']
     ProductTable: typeof import('./src/components/product/ProductTable.vue')['default']
-    Receipt: typeof import('./src/components/Receipt.vue')['default']
     ReloadButton: typeof import('./src/components/common/ReloadButton.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchFilter: typeof import('./src/components/common/SearchFilter.vue')['default']
     Sidebar: typeof import('./src/components/Sidebar.vue')['default']
-    Skeleton: typeof import('./src/components/Skeleton.vue')['default']
     SkeletonGrid: typeof import('./src/components/SkeletonGrid.vue')['default']
   }
 }

@@ -20,7 +20,7 @@
         lines="two"
       >
         <template #subtitle>
-          Bs. {{ cartActions.getItemSubtotal(item.cod_producto) }}
+          USD {{ cartActions.getItemSubtotal(item.cod_producto).toFixed(2) }}
         </template>
 
         <template #title>
@@ -56,7 +56,7 @@
           </span>
 
           <span class="text-h6">
-            Bs. {{ cartActions.getTotalPrice().toFixed(2) }}
+            USD {{ cartActions.getTotalPrice().toFixed(2) }}
           </span>
         </v-row>
 

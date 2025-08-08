@@ -13,7 +13,7 @@
     density="compact"
     link
     variant="tonal"
-    @click="cartActions.addItem(item.cod_producto, item.precio)"
+    @click="cartActions.addItem(item.cod_producto, item.precio_usd)"
   >
     <v-img
       cover
@@ -28,7 +28,7 @@
       </v-card-title>
 
       <v-card-subtitle>
-        <b>Bs. {{ item.precio }}</b>
+        <b>Bs. {{ item.precio_usd }}</b>
       </v-card-subtitle>
     </v-card-item>
   </v-card>
