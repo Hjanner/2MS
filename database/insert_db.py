@@ -80,15 +80,15 @@ def insert_data():
 
 # --- Inserts para la tabla Compras ---
         compras_data = [
-            ('2024-07-01', 'J-12345678-9'),
-            ('2024-07-05', 'V-98765432-1'),
-            ('2024-07-10', 'G-54321098-7'),
-            ('2024-07-12', 'J-12345678-9')
+            ('2024-07-01', 'J-12345678-9', 100),
+            ('2024-07-05', 'V-98765432-1', 200),
+            ('2024-07-10', 'G-54321098-7', 120),
+            ('2024-07-12', 'J-12345678-9', 122)
         ]
         cursor.executemany("INSERT INTO Compras (fecha, Rif) VALUES (?, ?)", compras_data)
 
-# --- Inserts para la tabla Inventarios (movimientos de entrada por compras) ---
-        inventarios_data = [
+# --- Inserts para la tabla Movimientos (movimientos de entrada por compras) ---
+        movimientos_data = [
             ('PROD001', 'compra', 'Compra inicial de mani dulce', 'entrada', 10, '2024-07-01'),
             ('PROD004', 'compra', 'Compra de galletas', 'entrada', 40, '2024-07-05'),
             ('PROD005', 'compra', 'Compra de Coca-Cola', 'entrada', 70, '2024-07-05'),
@@ -96,14 +96,14 @@ def insert_data():
             ('PROD009', 'compra', 'Compra de papas fritas', 'entrada', 25, '2024-07-10'),
             ('PROD010', 'compra', 'Compra de Dominó', 'entrada', 5, '2024-07-12')
         ]
-        cursor.executemany("INSERT INTO Inventarios (cod_producto, referencia, comentario, tipo_movimiento, cant_movida, fc_actualizacion) VALUES (?, ?, ?, ?, ?, ?)", inventarios_data)
+        cursor.executemany("INSERT INTO Movimientos (cod_producto, referencia, comentario, tipo_movimiento, cant_movida, fc_actualizacion) VALUES (?, ?, ?, ?, ?, ?)", movimientos_data)
 
 # --- Inserts para la tabla Compra_Inventario ---
         # cursor.execute("SELECT id_compra FROM Compras ORDER BY id_compra ASC")
         # compra_ids = [row[0] for row in cursor.fetchall()]
 
-        # # Fetch IDs for Inventarios (assuming they were inserted in order)
-        # cursor.execute("SELECT id_inventario FROM Inventarios ORDER BY id_inventario ASC")
+        # # Fetch IDs for movimientos (assuming they were inserted in order)
+        # cursor.execute("SELECT id_movimiento FROM Movimientos ORDER BY id_movimiento ASC")
         # inventario_ids = [row[0] for row in cursor.fetchall()]
 
         # # --- Inserts para la tabla Ventas (asociadas a Pagos) ---

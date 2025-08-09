@@ -3,7 +3,7 @@ from database import db_path
 
 COMPRA_INVENTARIO_TRIGGER_BEFORE = """
 CREATE TRIGGER IF NOT EXISTS tr_after_inventario_insert
-AFTER INSERT ON Inventarios
+AFTER INSERT ON Movimientos
 WHEN NEW.referencia = 'compra'
 BEGIN
     -- Validar que tenga costo_unitario para compras
@@ -19,8 +19,66 @@ BEGIN
 END;
 """
 
+INGRESAR_NOPREPARADO_TRIGGER = """
+CREATE TRIGGER IF NOT EXISTS tr_after_producto_nopreparado_insert
+AFTER INSERT ON Productos_noPreparados
+BEGIN
+    -- Verificar que el producto exista en la tabla Productos
+    SELECT CASE
+        WHEN (SELECT COUNT(*) FROM Productos WHERE cod_producto = NEW.cod_producto_noPreparado) = 0
+        THEN RAISE(ABORT, 'El producto no existe en la tabla Productos')
+    END;
+    
+    -- Insertar movimiento de inventario inicial (entrada por ajuste inicial)
+    INSERT INTO Movimientos (
+        cod_producto,
+        referencia,
+        tipo_movimiento,
+        cant_movida,
+        costo_unitario,
+        fc_actualizacion,
+        comentario
+    ) VALUES (
+        NEW.cod_producto_noPreparado,
+        'ajuste',
+        'entrada',
+        NEW.cant_actual,
+        NEW.costo_compra,
+        date('now'),
+        'Registro inicial de producto no preparado'
+    );
+END;
+"""
+
+ACTUALIZAR_NOPREPARADO_TRIGGER = """
+CREATE TRIGGER IF NOT EXISTS tr_after_producto_nopreparado_update
+AFTER UPDATE OF cant_actual ON Productos_noPreparados
+WHEN NEW.cant_actual <> OLD.cant_actual
+BEGIN
+    INSERT INTO Movimientos (
+        cod_producto,
+        referencia,
+        tipo_movimiento,
+        cant_movida,
+        costo_unitario,
+        fc_actualizacion,
+        comentario
+    ) VALUES (
+        NEW.cod_producto_noPreparado,
+        'ajuste',
+        CASE WHEN NEW.cant_actual > OLD.cant_actual THEN 'entrada' ELSE 'salida' END,
+        abs(NEW.cant_actual - OLD.cant_actual),
+        NEW.costo_compra,
+        date('now'),
+        'Ajuste de inventario'
+    );
+END;
+"""
+
 ALL_TRIGGERS = [
-    COMPRA_INVENTARIO_TRIGGER_BEFORE
+    COMPRA_INVENTARIO_TRIGGER_BEFORE,
+    INGRESAR_NOPREPARADO_TRIGGER,
+    ACTUALIZAR_NOPREPARADO_TRIGGER
     # añadir más triggers aquí
 ]
 

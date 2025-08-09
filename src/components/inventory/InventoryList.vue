@@ -2,7 +2,6 @@
 import { ref, computed } from 'vue';
 import ReloadButton from '@/components/common/ReloadButton.vue';
 import ProductDetailRow from '@/components/product/ProductDetailRow.vue';
-import ProductForm from '@/components/product/ProductForm.vue';
 import LowStockAlert from '@/components/inventory/LowStockAlert.vue';
 import InventoryMetrics from '@/components/inventory/InventoryMetrics.vue';
 import { formatCurrency, getStockColor, getStockStatus } from '@/utils/formatters';

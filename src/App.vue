@@ -14,9 +14,10 @@
         v-model="snackbar.show"
         :color="snackbar.color"
         location="bottom right"
-        text="{{ snackbar.message }}"
         timeout="3000"
-      />
+      >
+        {{ snackbar.message }}
+      </v-snackbar>
     </v-main>
   </v-app>
 </template>

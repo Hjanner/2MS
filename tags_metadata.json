@@ -44,8 +44,8 @@
         "description": "Operaciones con Pagos"
     },
     {
-        "name": "Inventarios",
-        "description": "Operaciones con Inventarios"
+        "name": "Movimientos",
+        "description": "Operaciones con movimiento de inventario"
     },
     {
         "name": "Detalle_Venta",

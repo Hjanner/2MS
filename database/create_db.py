@@ -110,8 +110,8 @@ CREATE TABLE IF NOT EXISTS Pagos (
   FOREIGN KEY (id_venta) REFERENCES Ventas(id_venta)
 );
 
-CREATE TABLE IF NOT EXISTS Inventarios (
-  id_inventario INTEGER PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE IF NOT EXISTS Movimientos (
+  id_movimiento INTEGER PRIMARY KEY AUTOINCREMENT,
   cod_producto TEXT,
   referencia TEXT CHECK (referencia IN ('compra', 'venta', 'descarte', 'ajuste', 'traslado_tienda', 'autoconsumo')),
   comentario TEXT,
@@ -123,7 +123,6 @@ CREATE TABLE IF NOT EXISTS Inventarios (
   
   FOREIGN KEY (cod_producto) REFERENCES Productos(cod_producto),
   FOREIGN KEY (id_compra) REFERENCES Compras(id_compra)
-
 );
 
 CREATE TABLE IF NOT EXISTS Detalle_Venta (

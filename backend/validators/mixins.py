@@ -115,7 +115,7 @@ class PagoValidators:
     def validate_monto(cls, v):
         return validate_positive_number(v, "Monto")
 
-class InventarioValidators:
+class MovimientoValidators:
     @field_validator('referencia')
     @classmethod
     def validate_referencia(cls, v):

@@ -249,12 +249,12 @@ class Pago(BaseModel, PagoValidators):
     def __repr__(self) -> str:
         return f"Pago(ID: {self.id_pago}, Venta ID: {self.id_venta}, Monto: {self.monto}, Método: {self.metodo_pago})"
 
-class Inventario(BaseModel, InventarioValidators):
+class Movimiento(BaseModel, MovimientoValidators):
     """
-    Modelo para la tabla 'Inventarios' .
+    Modelo para la tabla 'Movimientos' .
     Registra los movimientos de inventario de un producto.
     """
-    id_inventario: Optional[int] = Field(None, description="ID único del movimiento de inventario (AUTOINCREMENT)")
+    id_movimiento: Optional[int] = Field(None, description="ID único del movimiento de inventario (AUTOINCREMENT)")
     cod_producto: str = Field(..., description="Código del producto afectado (clave foránea)")
     referencia: str = Field(..., description="Referencia del movimiento ('compra', 'venta', 'descarte', 'ajuste', 'traslado_tienda', 'autoconsumo')")
     comentario: Optional[str] = Field(None, description="Comentario adicional sobre el movimiento (opcional)")
@@ -268,11 +268,11 @@ class Inventario(BaseModel, InventarioValidators):
         return self.model_dump(mode='json')
 
     @staticmethod
-    def from_dict(data: Dict[str, Any]) -> 'Inventario':
-        return Inventario(**data)
+    def from_dict(data: Dict[str, Any]) -> 'Movimiento':
+        return Movimiento(**data)
 
     def __repr__(self) -> str:
-        return f"Inventario(ID: {self.id_inventario}, Producto: {self.cod_producto}, Tipo: {self.tipo_movimiento}, Cant: {self.cant_movida})"
+        return f"Movimiento(ID: {self.id_movimiento}, Producto: {self.cod_producto}, Tipo: {self.tipo_movimiento}, Cant: {self.cant_movida})"
 
 class DetalleVenta(BaseModel, DetalleVentaValidators):
     """

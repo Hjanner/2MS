@@ -5,6 +5,14 @@ export function formatCurrency(amount) {
       minimumFractionDigits: 2
     }).format(amount);
 }
+
+export function formatCurrencyBs(amount) {
+    return new Intl.NumberFormat('es-VE', {
+      style: 'currency',
+      currency: 'VES',
+      minimumFractionDigits: 2
+    }).format(amount);
+}
   
 export function getStockColor(producto) {
     if (producto.tipo_producto === 'preparado') return 'grey';
@@ -18,4 +26,12 @@ export function getStockStatus(producto) {
     if (producto.cant_actual <= 0) return 'Sin stock';
     if (producto.cant_actual <= producto.cant_min) return 'Stock bajo';
     return 'Disponible';
+}
+
+export function getCurrentDate() {
+    return new Date().toISOString().split('T')[0];
+}
+
+export function getCurrentTimeStamp () {
+    return Date.now();
 }

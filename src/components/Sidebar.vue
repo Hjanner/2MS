@@ -35,6 +35,15 @@
         title="Clientes"
         to="/Clients"
       />
+
+      <v-list-item
+        link
+        prepend-icon="mdi-receipt-text-outline"
+        title="Compras"
+        to="/Purchases"
+      />
     </v-list>
+
+
   </v-navigation-drawer>
 </template>
