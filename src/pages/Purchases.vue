@@ -45,11 +45,11 @@ async function fetchProductos() {
 async function fetchCompras() {
   loading.value = true;
   try {
-    const response = await api.get('/compras/');
+    const response = await api.get('/compras/');    
     compras.value = response.data.map(compra => ({
       ...compra,
       fecha_formatted: new Date(compra.fecha).toLocaleDateString('es-ES'),
-      proveedor_nombre: compra.razon_social || 'Sin proveedor'
+      proveedor_nombre: compra.Rif || 'Sin proveedor'
     }));
     filteredCompras.value = compras.value;
   } catch (error) {

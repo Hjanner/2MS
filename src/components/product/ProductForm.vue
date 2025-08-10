@@ -206,6 +206,8 @@ function handleSubmit() {
     ...(product.value.tipo_producto === 'noPreparado' ? noPreparadoData.value : {}),
     ...(product.value.tipo_producto === 'preparado' ? preparadoData.value : {})
   });
+
+  resetForm();
 }
 
 function resetForm() {

@@ -1,5 +1,7 @@
-from typing import Optional, Union
+from typing import Optional, Union, List
 from pydantic import BaseModel, Field
+from .models import Compra, Proveedor, Producto, ProductoNoPreparado, Movimiento
+
 
 class ProductoVistaBase(BaseModel):
     cod_producto: str = Field(..., description="Código único del producto")
@@ -22,3 +24,24 @@ class ProductoVistaNoPreparado(ProductoVistaBase):
     Rif: Optional[str] = Field(None, description="RIF del proveedor")
     
 ProductoVista = Union[ProductoVistaPreparado, ProductoVistaNoPreparado, ProductoVistaBase]
+
+#MODELO DE VISTA PARA DETALLES DE COMPRA
+class DetalleProductoCompra(BaseModel):
+    """Modelo que combina información de producto y su detalle en la compra"""
+    producto: Producto
+    producto_no_preparado: ProductoNoPreparado
+    movimiento: Movimiento
+    
+class DetalleCompra(BaseModel):
+    """Modelo completo para el detalle de una compra"""
+    compra: Compra
+    proveedor: Proveedor
+    productos: List[DetalleProductoCompra]
+    fecha_formateada: str = Field(..., description="Fecha formateada como DD/MM/YYYY")
+
+class ResumenCompra(BaseModel):
+    """Modelo para resumen de compra (sin detalles de productos)"""
+    compra: Compra
+    proveedor: Proveedor
+    cantidad_productos: int = Field(..., description="Cantidad de productos diferentes en la compra")
+    fecha_formateada: str = Field(..., description="Fecha formateada como DD/MM/YYYY")

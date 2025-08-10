@@ -65,7 +65,7 @@ export default {
             <v-icon>mdi-delete-outline</v-icon>
           </v-btn>
           <v-btn icon size="small" color="primary" @click="$emit('info', item)">
-            <v-icon>mdi-information-outline</v-icon>
+            <v-icon>mdi-eye-outline</v-icon>
           </v-btn>
         </div>
       </template>

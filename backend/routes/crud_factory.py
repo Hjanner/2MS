@@ -1,6 +1,6 @@
 import inspect
 from fastapi import APIRouter, HTTPException, Form, File, UploadFile, Depends
-from typing import Any, Dict, Type, List, Optional, Union
+from typing import Any, Dict, Type, List, Optional
 
 from backend.utilities.get_data import get_form_data_as_dict
 

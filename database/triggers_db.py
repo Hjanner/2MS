@@ -1,6 +1,7 @@
 import sqlite3
 from database import db_path
 
+#actualiza el stock de productos, despues del cambio en la tabla de movimientos a causa de una compra
 COMPRA_INVENTARIO_TRIGGER_BEFORE = """
 CREATE TRIGGER IF NOT EXISTS tr_after_inventario_insert
 AFTER INSERT ON Movimientos
@@ -19,6 +20,7 @@ BEGIN
 END;
 """
 
+#actualiza la tabla movimiento, al momento de crear uno producto no preparado
 INGRESAR_NOPREPARADO_TRIGGER = """
 CREATE TRIGGER IF NOT EXISTS tr_after_producto_nopreparado_insert
 AFTER INSERT ON Productos_noPreparados
@@ -50,11 +52,20 @@ BEGIN
 END;
 """
 
+#actualiza Productos_noPreparados si detecta un cambio en la cantidad actual
 ACTUALIZAR_NOPREPARADO_TRIGGER = """
 CREATE TRIGGER IF NOT EXISTS tr_after_producto_nopreparado_update
 AFTER UPDATE OF cant_actual ON Productos_noPreparados
 WHEN NEW.cant_actual <> OLD.cant_actual
 BEGIN
+    SELECT CASE WHEN EXISTS (
+        SELECT 1 FROM Movimientos 
+        WHERE cod_producto = NEW.cod_producto_noPreparado 
+          AND referencia = 'compra' 
+          AND fc_actualizacion >= datetime('now', '-5 seconds')
+    ) THEN RAISE(IGNORE) END;
+
+    
     INSERT INTO Movimientos (
         cod_producto,
         referencia,
@@ -78,7 +89,6 @@ END;
 ALL_TRIGGERS = [
     COMPRA_INVENTARIO_TRIGGER_BEFORE,
     INGRESAR_NOPREPARADO_TRIGGER,
-    ACTUALIZAR_NOPREPARADO_TRIGGER
     # añadir más triggers aquí
 ]
 

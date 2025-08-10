@@ -1,4 +1,6 @@
 from backend.models.models import *
+from backend.models.view_models import ProductoVistaBase
+from backend.services.comprasDetalle_service import CompraService
 from database.database import db_path
 from backend.services.base_service import BaseService
 
@@ -15,3 +17,6 @@ movimiento_service = BaseService(Movimiento, "Movimientos", db_path)
 detalle_venta_service = BaseService(DetalleVenta, "Detalle_Venta", db_path)
 producto_preparado_service = BaseService(ProductoPreparado, "Productos_preparados", db_path)
 producto_no_preparado_service = BaseService(ProductoNoPreparado, "Productos_noPreparados", db_path)
+
+vistaProductos_service = BaseService(ProductoVistaBase, "vista_productos_completos", db_path)
+vistaCompras_service = CompraService(db_path)

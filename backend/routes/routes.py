@@ -27,3 +27,4 @@ def update(cod_producto: str, producto: Producto):
     if not updated:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return updated
+

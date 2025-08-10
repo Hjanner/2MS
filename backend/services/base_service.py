@@ -266,3 +266,14 @@ class BaseService:
             conn.commit()
             return cursor.rowcount > 0 
         
+        
+#VISTAS
+    def get_productos_completos(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene todos los productos con información completa desde la vista
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row  # Para acceso por nombre de columna
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM vista_productos_completos")
+            return [dict(row) for row in cursor.fetchall()]

@@ -1,3 +1,5 @@
+from backend.controllers.compras_controller import VistaComprasController
+from backend.models.view_models import ProductoVista
 from backend.services.services import *
 from backend.models.models import *
 from .base_controller import BaseController
@@ -15,3 +17,6 @@ movimientos_controller = BaseController[Movimiento](movimiento_service)
 detalle_venta_controller = BaseController[DetalleVenta](detalle_venta_service)
 productos_preparados_controller = BaseController[ProductoPreparado](producto_preparado_service)
 productos_noPreparados_controller = BaseController[ProductoNoPreparado](producto_no_preparado_service)
+
+vistaProductosController = BaseController[ProductoVista](vistaProductos_service)
+vistaComprasController = VistaComprasController(vistaCompras_service)

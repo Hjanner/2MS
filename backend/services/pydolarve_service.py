@@ -19,7 +19,6 @@ class PyDolarVE:
 
     async def get_precio_dolar(self): 
         data = await self.get_data()
-        print(data)
         if data:
             valor_usd_bs = data['price']
             fecha_str = data['last_update'].strip()  # '18/07/2025, 12:00 AM'

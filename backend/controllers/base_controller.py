@@ -1,5 +1,6 @@
 from typing import List, Optional, TypeVar, Generic, Dict, Any
 from fastapi import HTTPException
+from backend.models.view_models import ProductoVistaBase, ProductoVistaNoPreparado, ProductoVistaPreparado
 from backend.services.base_service import DuplicateKeyError
 
 T = TypeVar('T')  # Modelo Pydantic
@@ -68,7 +69,6 @@ class BaseController(Generic[T]):
         #         }
         #     )
 
-
     def update(self, id_field: str, id_value, obj_in: T) -> bool:
         """
         Actualiza un registro existente.
@@ -121,3 +121,17 @@ class BaseController(Generic[T]):
                 "field": e.field,
                 "value": e.value
             })
+
+    def get_producto_completo(self) -> List[ProductoVistaBase]:
+        productos_data = self.service.get_productos_completos()
+        productos = []
+        
+        for prod in productos_data:
+            if prod['tipo_producto'] == 'preparado':
+                productos.append(ProductoVistaPreparado(**prod))
+            elif prod['tipo_producto'] == 'noPreparado':
+                productos.append(ProductoVistaNoPreparado(**prod))
+            else:
+                productos.append(ProductoVistaBase(**prod))
+        
+        return productos

@@ -1,11 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue';
 import ReloadButton from '@/components/common/ReloadButton.vue';
-import ProductDetailRow from '@/components/product/ProductDetailRow.vue';
 import LowStockAlert from '@/components/inventory/LowStockAlert.vue';
 import InventoryMetrics from '@/components/inventory/InventoryMetrics.vue';
+import ProductDetailModal from '@/components/product/ProductDetailModal.vue';
 import { formatCurrency, getStockColor, getStockStatus } from '@/utils/formatters';
-
 
 const props = defineProps({
   productos: {
@@ -20,7 +19,11 @@ const props = defineProps({
 
 const emit = defineEmits(['refresh', 'edit']);
 
-const expandedItems = ref([]);
+// Estado para controlar el modal de detalles
+const detailModal = ref({
+  show: false,
+  selectedProduct: null
+});
 
 // Computadas para métricas de inventario
 const productosConStockBajo = computed(() => {
@@ -39,7 +42,6 @@ const valorTotalInventario = computed(() => {
 // Headers para la tabla
 const headers = [
   { title: 'Imagen', key: 'img', sortable: false, width: '80px' },
-  // { title: 'Código', key: 'cod_producto', sortable: true },
   { title: 'Nombre', key: 'nombre', sortable: true },
   { title: 'Categoría', key: 'categoria_descr', sortable: true },
   { title: 'Tipo', key: 'tipo_producto', sortable: true},
@@ -51,6 +53,13 @@ const headers = [
 
 function editProduct(producto) {
   emit('edit', producto);
+}
+
+function showDetails(producto) {
+  detailModal.value = {
+    show: true,
+    selectedProduct: producto
+  };
 }
 </script>
 
@@ -66,7 +75,6 @@ function editProduct(producto) {
     <!-- Alerta de productos con stock bajo -->
     <LowStockAlert :low-stock-products="productosConStockBajo" />
 
-
     <!-- Tabla de productos -->
     <v-data-table
       :headers="headers"
@@ -76,8 +84,6 @@ function editProduct(producto) {
       no-data-text="No hay productos en el inventario"
       :items-per-page="10"
       :items-per-page-options="[5, 10, 25, 50, -1]"
-      v-model:expanded="expandedItems"
-      show-expand
       class="elevation-1"
     >
       <!-- Columna de imagen -->
@@ -150,14 +156,14 @@ function editProduct(producto) {
 
       <!-- Columna de acciones -->
       <template v-slot:item.actions="{ item }">
-        <v-btn-group variant="text" density="compact" class="btn-action">
+        <v-btn-group  density="comfortable" class="btn-action">
           <v-tooltip text="Editar producto">
             <template v-slot:activator="{ props }">
               <v-btn
+                rounded="pill"
                 v-bind="props"
-                icon="mdi-pencil"
+                icon="mdi-pencil-outline"
                 size="small"
-                color="primary"
                 @click="editProduct(item)"
               />
             </template>
@@ -166,11 +172,12 @@ function editProduct(producto) {
           <v-tooltip text="Ver detalles">
             <template v-slot:activator="{ props }">
               <v-btn
+                rounded="pill"
                 v-bind="props"
-                icon="mdi-eye"
+                icon="mdi-eye-outline"
                 size="small"
-                @click="expandedItems = expandedItems.includes(item) ? 
-                  expandedItems.filter(i => i !== item) : [...expandedItems, item]"
+                color="primary"
+                @click="showDetails(item)"
               />
             </template>
           </v-tooltip>
@@ -178,21 +185,15 @@ function editProduct(producto) {
           <v-tooltip v-if="item.tipo_producto === 'noPreparado'" text="Ajustar stock">
             <template v-slot:activator="{ props }">
               <v-btn
+                rounded="pill"
                 v-bind="props"
                 icon="mdi-package-variant-plus"
                 size="small"
-                color="primary"
+                color="warning"
               />
             </template>
           </v-tooltip>
         </v-btn-group>
-      </template>
-
-       <!-- Fila expandida con detalles -->
-      <template v-slot:expanded-row="{ item, columns }">
-        <td :colspan="columns.length">
-          <ProductDetailRow :item="item" />
-        </td>
       </template>
 
       <!-- Template cuando no hay datos -->
@@ -209,8 +210,16 @@ function editProduct(producto) {
       </template>
     </v-data-table>
 
-      <!-- boton de actualizar lista -->
-      <ReloadButton :loading="loading" @click="$emit('refresh')" />
+    <!-- Modal de detalles del producto -->
+    <ProductDetailModal 
+      v-if="detailModal.selectedProduct"
+      :product="detailModal.selectedProduct"
+      :show="detailModal.show"
+      @update:show="detailModal.show = $event"
+    />
+
+    <!-- boton de actualizar lista -->
+    <ReloadButton :loading="loading" @click="$emit('refresh')" />
   </div>
 </template>
 
