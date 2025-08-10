@@ -1,5 +1,4 @@
 import sqlite3
-import os
 from database import db_path
 
 print("Ruta de la base de datos:", db_path)
@@ -85,7 +84,7 @@ def insert_data():
             ('2024-07-10', 'G-54321098-7', 120),
             ('2024-07-12', 'J-12345678-9', 122)
         ]
-        cursor.executemany("INSERT INTO Compras (fecha, Rif) VALUES (?, ?)", compras_data)
+        cursor.executemany("INSERT INTO Compras (fecha, Rif, gasto_total) VALUES (?, ?, ?)", compras_data)
 
 # --- Inserts para la tabla Movimientos (movimientos de entrada por compras) ---
         movimientos_data = [
