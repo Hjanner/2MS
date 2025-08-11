@@ -86,32 +86,16 @@ def insert_data():
         ]
         cursor.executemany("INSERT INTO Compras (fecha, Rif, gasto_total) VALUES (?, ?, ?)", compras_data)
 
-# --- Inserts para la tabla Movimientos (movimientos de entrada por compras) ---
-        movimientos_data = [
-            ('PROD001', 'compra', 'Compra inicial de mani dulce', 'entrada', 10, '2024-07-01'),
-            ('PROD004', 'compra', 'Compra de galletas', 'entrada', 40, '2024-07-05'),
-            ('PROD005', 'compra', 'Compra de Coca-Cola', 'entrada', 70, '2024-07-05'),
-            ('PROD007', 'compra', 'Compra de agua mineral', 'entrada', 50, '2024-07-10'),
-            ('PROD009', 'compra', 'Compra de papas fritas', 'entrada', 25, '2024-07-10'),
-            ('PROD010', 'compra', 'Compra de Dominó', 'entrada', 5, '2024-07-12')
-        ]
-        cursor.executemany("INSERT INTO Movimientos (cod_producto, referencia, comentario, tipo_movimiento, cant_movida, fc_actualizacion) VALUES (?, ?, ?, ?, ?, ?)", movimientos_data)
-
-# --- Inserts para la tabla Compra_Inventario ---
-        # cursor.execute("SELECT id_compra FROM Compras ORDER BY id_compra ASC")
-        # compra_ids = [row[0] for row in cursor.fetchall()]
-
-        # # Fetch IDs for movimientos (assuming they were inserted in order)
-        # cursor.execute("SELECT id_movimiento FROM Movimientos ORDER BY id_movimiento ASC")
-        # inventario_ids = [row[0] for row in cursor.fetchall()]
-
-        # # --- Inserts para la tabla Ventas (asociadas a Pagos) ---
-        # ventas_data = [
-        #     (100.00, '2024-07-01', 2.74, 'credito', '12345678', 1), # Venta 1 (Juan Perez)
-        #     (150.00, '2024-07-03', 4.11, 'credito', '87654321', 1), # Venta 2 (Ana Gomez)
-        #     (75.00, '2024-07-05', 2.05, 'credito', '11223344', 1)  # Venta 3 (Carlos Ruiz)
-        # ]
-        # cursor.executemany("INSERT INTO Ventas (monto_total_bs, fecha, monto_total_usd, tipo, ci_cliente, id_tasa) VALUES (?, ?, ?, ?, ?, ?)", ventas_data)
+# # --- Inserts para la tabla Movimientos (movimientos de entrada por compras) ---
+#         movimientos_data = [
+#             ('PROD001', 'compra', 'Compra inicial de mani dulce', 'entrada', 10, '2024-07-01'),
+#             ('PROD004', 'compra', 'Compra de galletas', 'entrada', 40, '2024-07-05'),
+#             ('PROD005', 'compra', 'Compra de Coca-Cola', 'entrada', 70, '2024-07-05'),
+#             ('PROD007', 'compra', 'Compra de agua mineral', 'entrada', 50, '2024-07-10'),
+#             ('PROD009', 'compra', 'Compra de papas fritas', 'entrada', 25, '2024-07-10'),
+#             ('PROD010', 'compra', 'Compra de Dominó', 'entrada', 5, '2024-07-12')
+#         ]
+#         cursor.executemany("INSERT INTO Movimientos (cod_producto, referencia, comentario, tipo_movimiento, cant_movida, fc_actualizacion) VALUES (?, ?, ?, ?, ?, ?)", movimientos_data)
 
 # --- Inserts para la tabla Creditos ---
         creditos_data = [

@@ -21,11 +21,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['refresh', 'edit']);
-
 const { showSnackbar } = useSnackbar();
-const showDeleteDialog = ref(false);
-const compraToDelete = ref(null);
-const deleting = ref(false);
+
 
 // Estado para controlar el diálogo de detalles
 const detailDialog = ref({
@@ -69,11 +66,6 @@ function getProveedorNombre(rif) {
   return proveedor ? proveedor.razon_social : rif || 'Sin proveedor';
 }
 
-// Emitir evento de edición
-function editCompra(compra) {
-  emit('edit', compra);
-}
-
 // Cerrar el diálogo de detalles
 function closeDetailDialog() {
   detailDialog.value = {
@@ -103,13 +95,7 @@ function closeDetailDialog() {
     >
       <!-- Slot para ID de compra -->
       <template #item.id_compra="{ item }">
-        <v-chip
-          size="small"
-          color="primary"
-          variant="outlined"
-        >
           {{ item.id_compra }}
-        </v-chip>
       </template>
 
       <!-- Slot para gasto total -->

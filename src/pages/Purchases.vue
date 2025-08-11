@@ -10,13 +10,11 @@ import { getCurrentDate, getCurrentTimeStamp } from '@/utils/formatters';
 const compras = ref([]);
 const filteredCompras = ref([]);
 const loading = ref(false);
-const { showSnackbar } = useSnackbar();
 const addingCompra = ref(false);
 const showAddDialog = ref(false);
 const addCompraErrors = ref({});
 const proveedores = ref([]);
 const productos = ref([]);
-const currentCompra = ref(null);
 
 // Fetch proveedores para el formulario
 async function fetchProveedores() {
@@ -162,10 +160,6 @@ function handleRefresh() {
 function closeAddDialog() {
   showAddDialog.value = false;
   addCompraErrors.value = {};
-}
-
-function closeEditDialog() {
-  currentCompra.value = null;
 }
 
 onMounted(async () => {

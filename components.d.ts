@@ -35,6 +35,7 @@ declare module 'vue' {
     ReloadButton: typeof import('./src/components/common/ReloadButton.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SaleForm: typeof import('./src/components/sale/SaleForm.vue')['default']
     SearchFilter: typeof import('./src/components/common/SearchFilter.vue')['default']
     Sidebar: typeof import('./src/components/Sidebar.vue')['default']
     SkeletonGrid: typeof import('./src/components/SkeletonGrid.vue')['default']

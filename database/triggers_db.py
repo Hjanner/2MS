@@ -2,8 +2,8 @@ import sqlite3
 from database import db_path
 
 #actualiza el stock de productos, despues del cambio en la tabla de movimientos a causa de una compra
-COMPRA_INVENTARIO_TRIGGER_BEFORE = """
-CREATE TRIGGER IF NOT EXISTS tr_after_inventario_insert
+MOVIMIENTO_COMPRA_TRIGGER_BEFORE = """
+CREATE TRIGGER IF NOT EXISTS tr_after_movimiento_insert
 AFTER INSERT ON Movimientos
 WHEN NEW.referencia = 'compra'
 BEGIN
@@ -85,10 +85,49 @@ BEGIN
     );
 END;
 """
+VENTA_COMPLETA_TRIGGER = """
+-- Trigger para actualizar inventario después de venta
+CREATE TRIGGER IF NOT EXISTS tr_after_venta_completa
+AFTER INSERT ON Pagos
+WHEN (SELECT COUNT(*) FROM Ventas WHERE id_venta = NEW.id_venta) > 0
+BEGIN
+    -- Registrar movimientos de salida por cada producto vendido
+    INSERT INTO Movimientos (
+        cod_producto, 
+        referencia, 
+        tipo_movimiento, 
+        cant_movida, 
+        fc_actualizacion,
+        comentario
+    )
+    SELECT 
+        dv.cod_producto,
+        'venta',
+        'salida',
+        dv.cantidad_producto,
+        datetime('now'),
+        'Venta #' || NEW.id_venta
+    FROM Detalle_Venta dv
+    WHERE dv.id_venta = NEW.id_venta;
+    
+    -- Actualizar stock de productos no preparados
+    UPDATE Productos_noPreparados
+    SET cant_actual = cant_actual - (
+        SELECT SUM(dv.cantidad_producto)
+        FROM Detalle_Venta dv
+        WHERE dv.cod_producto = Productos_noPreparados.cod_producto_noPreparado
+        AND dv.id_venta = NEW.id_venta
+    )
+    WHERE cod_producto_noPreparado IN (
+        SELECT cod_producto FROM Detalle_Venta WHERE id_venta = NEW.id_venta
+    );
+END;
+"""
 
 ALL_TRIGGERS = [
-    COMPRA_INVENTARIO_TRIGGER_BEFORE,
+    MOVIMIENTO_COMPRA_TRIGGER_BEFORE,
     INGRESAR_NOPREPARADO_TRIGGER,
+    VENTA_COMPLETA_TRIGGER,
     # añadir más triggers aquí
 ]
 

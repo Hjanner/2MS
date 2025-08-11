@@ -265,7 +265,23 @@ class BaseService:
             )
             conn.commit()
             return cursor.rowcount > 0 
-        
+
+    def get_last_record(self, id_field: str) -> Optional[Any]:
+        """
+        Obtiene el último registro de la tabla.
+        :param id_field: Nombre del campo clave primaria para ordenar.
+        :return: Instancia del modelo o None si la tabla está vacía.
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute(f"SELECT * FROM {self.table_name} ORDER BY {id_field} DESC LIMIT 1")
+            
+            row = cursor.fetchone()
+            print('ooooooooooooooooo', row)
+            if row:
+                return self.model.from_dict(dict(zip([col[0] for col in cursor.description], row)))
+            return None
         
 #VISTAS
     def get_productos_completos(self) -> List[Dict[str, Any]]:

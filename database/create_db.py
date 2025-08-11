@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS Clientes (
 CREATE TABLE IF NOT EXISTS Ventas (
   id_venta INTEGER PRIMARY KEY AUTOINCREMENT,
   monto_total_bs REAL,
-  fecha DATE,
+  fecha_hora DATE,
   monto_total_usd REAL,
   tipo TEXT CHECK (tipo IN ('credito', 'de_contado')),
   ci_cliente TEXT,
@@ -32,7 +32,6 @@ CREATE TABLE IF NOT EXISTS TasasCambio (
   valor_usd_bs REAL,
   origen TEXT CHECK (origen IN ('BCV', 'Manual'))
 );
-
 
 CREATE TABLE IF NOT EXISTS categoria_productos (
   id_categoria INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -97,7 +96,6 @@ CREATE TABLE IF NOT EXISTS Creditos (
 CREATE TABLE IF NOT EXISTS Pagos (
   id_pago INTEGER PRIMARY KEY AUTOINCREMENT,
   id_venta INTEGER,
-  num_cor TEXT,
   monto REAL,
   fecha_pago DATE,
   metodo_pago TEXT CHECK (metodo_pago IN (

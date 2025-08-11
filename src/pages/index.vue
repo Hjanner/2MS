@@ -13,6 +13,25 @@
     items.value.filter(i => matchesSearchTerm(i.nombre)),
   )
 
+
+  const selectedItems = computed(() => {
+    const cartItems = getCart()
+    const cartProductIds = Object.keys(cartItems)
+
+    return cartProductIds.map(productId => {
+        const product = items.value.find(item => item.cod_producto === productId)
+        if (product) {
+          return {
+            ...product,
+            quantity: cartItems[productId].quantity,
+            total: cartItems[productId].quantity * cartItems[productId].price,
+          }
+        }
+        return null // En caso de que el producto no exista
+      })
+      .filter(Boolean) // Elimina cualquier item nulo
+  })
+
   const {
     getCart,
     clearCart,
@@ -33,9 +52,9 @@
     getCartTotal,
   })
 
-  const selectedItems = computed(() =>
-    items.value.filter(i => i.cod_producto in getCart()),
-  )
+  // const selectedItems = computed(() =>
+  //   items.value.filter(i => i.cod_producto in getCart()),
+  // )
 
   onUnmounted(() => {
     clearSearchTerm()

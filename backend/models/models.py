@@ -1,4 +1,3 @@
-import sqlite3
 from fastapi import UploadFile
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
@@ -54,7 +53,7 @@ class Venta(BaseModel, VentaValidators):
     """
     id_venta: Optional[int] = Field(None, description="ID único de la venta (AUTOINCREMENT)")
     monto_total_bs: float = Field(..., description="Monto total de la venta en Bolívares")
-    fecha: date = Field(..., description="Fecha de la venta")
+    fecha_hora: Optional[datetime] = Field(..., default_factory=datetime.now, description="Fecha y hora de la venta")
     monto_total_usd: float = Field(..., description="Monto total de la venta en Dólares")
     tipo: str = Field(..., description="Tipo de venta ('credito' o 'de_contado')")
     ci_cliente: Optional[str] = Field(None, description="CI del cliente asociado a la venta (opcional)")
@@ -232,7 +231,6 @@ class Pago(BaseModel, PagoValidators):
     """
     id_pago: Optional[int] = Field(None, description="ID único del pago (AUTOINCREMENT)")
     id_venta: int = Field(..., description="ID de la venta asociada al pago (clave foránea)")
-    num_cor: str = Field(..., description="Número correlativo del pago")
     monto: float = Field(..., description="Monto del pago")
     fecha_pago: date = Field(..., description="Fecha en que se realizó el pago")
     metodo_pago: str = Field(..., description="Método de pago ('efectivo_bs', 'efectvo_usd', 'pago_movil', 'debito', 'transferencia')")
@@ -279,48 +277,25 @@ class DetalleVenta(BaseModel, DetalleVentaValidators):
     Modelo para la tabla 'Detalle_Venta' .
     Detalle de los productos incluidos en una venta.
     """
-    id_detalle: Optional[int] = Field(None, description="ID único del detalle de venta (AUTOINCREMENT)")
+    id_detalle: Optional[int] = Field(default=None, description="ID único del detalle de venta (AUTOINCREMENT)")
     id_venta: int = Field(..., description="ID de la venta a la que pertenece el detalle (clave foránea)")
     cod_producto: str = Field(..., description="Codigo del producto en el detalle (clave foránea)")
     cantidad_producto: int = Field(..., description="Cantidad del producto vendido")
     precio_unitario: float = Field(..., description="Precio unitario del producto al momento de la venta")
 
+    # Configuración del modelo
+    model_config = {
+        "extra": "ignore"  # Ignora campos extra si los hay
+    }
+
     def to_dict(self) -> Dict[str, Any]:
-        return self.model_dump()
+        return self.model_dump(exclude_none=True)  # Excluye campos None
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> 'DetalleVenta':
-        return DetalleVenta(**data)
+        # Filtra campos None antes de crear la instancia
+        filtered_data = {k: v for k, v in data.items() if v is not None}
+        return DetalleVenta(**filtered_data)
 
     def __repr__(self) -> str:
         return f"DetalleVenta(ID: {self.id_detalle}, Venta ID: {self.id_venta}, Producto: {self.cod_producto}, Cant: {self.cantidad_producto})"
-
-
-    """
-    Clase para gestionar la conexión a la base de datos SQLite
-    y la creación de las tablas.
-    """
-    def __init__(self, db_path: str = 'cafetin_management.db'):
-        self.db_path = db_path
-        self.conn: Optional[sqlite3.Connection] = None
-        self.cursor: Optional[sqlite3.Cursor] = None
-
-    def connect(self):
-        """Establece la conexión a la base de datos."""
-        try:
-            self.conn = sqlite3.connect(self.db_path)
-            self.conn.row_factory = sqlite3.Row # Para acceder a las columnas por nombre
-            self.cursor = self.conn.cursor()
-            print(f"Conectado a la base de datos: {self.db_path}")
-        except sqlite3.Error as e:
-            print(f"Error al conectar a la base de datos: {e}")
-            self.conn = None
-            self.cursor = None
-
-    def close(self):
-        """Cierra la conexión a la base de datos."""
-        if self.conn:
-            self.conn.close()
-            print("Conexión a la base de datos cerrada.")
-            self.conn = None
-            self.cursor = None
