@@ -1,123 +1,156 @@
 import sqlite3
-from typing import Dict, List
+from typing import List
+from fastapi import HTTPException
+from backend.models.models import DetalleVenta, Pago, Venta, ProductoNoPreparado
 
 def registrar_venta_con_detalles_y_pago(
-        venta_data: Dict, 
-        detalles_data: List[Dict], 
-        pago_data: Dict, 
-        db_path: str
-    ) -> int:
+    venta_data: Venta,
+    detalles_data: List[DetalleVenta],
+    pago_data: Pago,
+    db_path: str
+) -> dict:
     """
-    Registra una venta completa con sus detalles y pago como transacción atómica.
+    Registra una venta completa con sus detalles y pago asociado,
+    validando que no queden cantidades negativas en inventario.
     
     Args:
-        venta_data: Diccionario con datos de la venta {
-            'monto_total_bs': float,
-            'fecha_hora': str (formato ISO),
-            'monto_total_usd': float,
-            'tipo': str,
-            'ci_cliente': str,
-            'id_tasa': int
-        }
-        detalles_data: Lista de diccionarios con detalles de productos [{
-            'cod_producto': str,
-            'cantidad_producto': int,
-            'precio_unitario': float
-        }]
-        pago_data: Diccionario con datos del pago {
-            'monto': float,
-            'fecha_pago': str (formato ISO),
-            'metodo_pago': str,
-            'referencia': str,
-            'num_tefl': str
-        }
-        db_path: Ruta al archivo de base de datos
+        venta_data: Datos de la venta
+        detalles_data: Lista de detalles de productos vendidos
+        pago_data: Datos del pago asociado
+        db_path: Ruta a la base de datos SQLite
     
     Returns:
-        int: ID de la venta registrada
-    
+        dict: Resultado de la operación con ID de venta generado
+        
     Raises:
-        sqlite3.Error: Si ocurre algún error en la base de datos
-        ValueError: Si hay inconsistencias en los datos
+        HTTPException: Si hay errores de validación o en la transacción
     """
     conn = None
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
-        # Validación básica de datos
-        if abs(sum(d['precio_unitario'] * d['cantidad_producto'] for d in detalles_data) - venta_data['monto_total_bs']) > 0.01:
-            raise ValueError("El monto total no coincide con la suma de los productos")
+        # # 1. Validaciones iniciales
+        # total_detalles = sum(d.precio_unitario * d.cantidad_producto for d in detalles_data)
+        # if abs(total_detalles - venta_data.monto_total_bs) > 0.01:
+        #     raise ValueError("El monto total no coincide con la suma de los productos")
         
-        if abs(pago_data['monto'] - venta_data['monto_total_bs']) > 0.01:
+        if abs(pago_data.monto - venta_data.monto_total_bs) > 0.01:
             raise ValueError("El monto del pago no coincide con el total de la venta")
-        
-        # Iniciar transacción
+
+        # 2. Verificar stock antes de comenzar la transacción
+        productos_verificar = {}
+        for detalle in detalles_data:
+            cursor.execute(
+                """SELECT p.cod_producto, np.cant_actual
+                   FROM Productos p
+                   LEFT JOIN Productos_noPreparados np ON p.cod_producto = np.cod_producto_noPreparado
+                   WHERE p.cod_producto = ?""",
+                (detalle.cod_producto,)
+            )
+            producto = cursor.fetchone()
+            
+            if not producto:
+                raise ValueError(f"Producto {detalle.cod_producto} no encontrado")
+            
+            cod_producto, cant_actual = producto
+            
+            # Solo verificamos stock para productos no preparados
+            if cant_actual is not None:
+                nueva_cantidad = cant_actual - detalle.cantidad_producto
+                if nueva_cantidad < 0:
+                    raise ValueError(
+                        f"No hay suficiente stock para {cod_producto}. "
+                        f"Stock actual: {cant_actual}, solicitado: {detalle.cantidad_producto}"
+                    )
+                productos_verificar[cod_producto] = {
+                    'cant_actual': cant_actual,
+                    'nueva_cantidad': nueva_cantidad
+                }
+
+        # 3. Iniciar transacción
         cursor.execute("BEGIN TRANSACTION")
-        
-        # 1. Insertar la venta
+
+        # 4. Insertar la venta
         cursor.execute(
             """INSERT INTO Ventas (
                 monto_total_bs, fecha_hora, monto_total_usd, 
                 tipo, ci_cliente, id_tasa
             ) VALUES (?, ?, ?, ?, ?, ?)""",
             (
-                venta_data['monto_total_bs'],
-                venta_data['fecha_hora'],
-                venta_data['monto_total_usd'],
-                venta_data['tipo'],
-                venta_data['ci_cliente'],
-                venta_data['id_tasa']
+                venta_data.monto_total_bs,
+                venta_data.fecha_hora,
+                venta_data.monto_total_usd,
+                venta_data.tipo,
+                venta_data.ci_cliente,
+                venta_data.id_tasa
             )
         )
         id_venta = cursor.lastrowid
-        
-        # 2. Insertar los detalles de venta
+
+        # 5. Insertar detalles
         for detalle in detalles_data:
-            # Verificar existencia del producto
-            cursor.execute(
-                "SELECT 1 FROM Productos WHERE cod_producto = ?",
-                (detalle['cod_producto'],)
-            )
-            if not cursor.fetchone():
-                raise ValueError(f"Producto {detalle['cod_producto']} no existe")
-            
+            # Insertar detalle
             cursor.execute(
                 """INSERT INTO Detalle_Venta (
                     id_venta, cod_producto, cantidad_producto, precio_unitario
                 ) VALUES (?, ?, ?, ?)""",
                 (
                     id_venta,
-                    detalle['cod_producto'],
-                    detalle['cantidad_producto'],
-                    detalle['precio_unitario']
+                    detalle.cod_producto,
+                    detalle.cantidad_producto,
+                    detalle.precio_unitario
                 )
             )
-        
-        # 3. Insertar el pago
+            
+        # 6. Insertar el pago
         cursor.execute(
             """INSERT INTO Pagos (
                 id_venta, monto, fecha_pago, 
                 metodo_pago, referencia, num_tefl
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            ) VALUES (?, ?, ?, ?, ?, ?)""",
             (
                 id_venta,
-                pago_data['monto'],
-                pago_data['fecha_pago'],
-                pago_data['metodo_pago'],
-                pago_data.get('referencia', ''),
-                pago_data.get('num_tefl', '')
+                pago_data.monto,
+                pago_data.fecha_pago,
+                pago_data.metodo_pago,
+                pago_data.referencia or None,
+                pago_data.num_tefl or None
             )
         )
-        
-        # 4. Confirmar transacción (el trigger se encargará de los movimientos)
+
+        # 7. Confirmar transacción
         conn.commit()
-        return id_venta
         
+        return {
+            "success": True,
+            "message": "Venta registrada exitosamente",
+            "id_venta": id_venta,
+            "productos_actualizados": productos_verificar
+        }
+
+    except ValueError as ve:
+        if conn:
+            conn.rollback()
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "success": False,
+                "error": "Error de validación",
+                "message": str(ve)
+            }
+        )
     except Exception as e:
         if conn:
             conn.rollback()
-        raise  # Re-lanzar la excepción para manejo superior
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "success": False,
+                "error": "Error en la transacción",
+                "message": str(e)
+            }
+        )
     finally:
         if conn:
             conn.close()

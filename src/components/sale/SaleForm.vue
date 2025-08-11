@@ -348,11 +348,10 @@ async function submitForm() {
   
   const formIsValid = await form.value.validate()
   if (!formIsValid.valid) return
-    
-  const id_venta = getCurrentTimeStamp()
+  
   // Preparar datos de venta según el modelo Pydantic
   const ventaData = {
-    id_venta: id_venta,
+    // No incluimos id_venta aquí, se generará automáticamente en el backend
     monto_total_bs: formData.value.monto_total_bs,
     fecha_hora: new Date().toISOString(),
     monto_total_usd: formData.value.monto_total_usd,
@@ -363,8 +362,7 @@ async function submitForm() {
 
   // Preparar datos de detalles según el modelo DetalleVenta
   const detallesData = props.productos.map(item => ({
-    // id_venta se asignará después de crear la venta
-    id_venta: id_venta,
+    // No incluimos id_venta aquí, se asignará automáticamente en el backend
     cod_producto: item.cod_producto,
     cantidad_producto: item.quantity,
     precio_unitario: item.precio_usd
@@ -372,8 +370,7 @@ async function submitForm() {
 
   // Preparar datos de pago según el modelo Pago
   const pagoDataFinal = {
-    // id_venta se asignará después de crear la venta
-    id_venta: id_venta,
+    // No incluimos id_venta aquí, se asignará automáticamente en el backend
     monto: pagoData.value.monto,
     fecha_pago: pagoData.value.fecha_pago,
     metodo_pago: pagoData.value.metodo_pago,

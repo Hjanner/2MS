@@ -1,6 +1,6 @@
 from fastapi import UploadFile
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import List, Optional, Dict, Any
 from datetime import date, datetime
 from backend.validators.mixins import *
 
@@ -230,7 +230,7 @@ class Pago(BaseModel, PagoValidators):
     Registra los pagos asociados a una venta.
     """
     id_pago: Optional[int] = Field(None, description="ID único del pago (AUTOINCREMENT)")
-    id_venta: int = Field(..., description="ID de la venta asociada al pago (clave foránea)")
+    id_venta: Optional[int] = Field(default=None, description="ID de la venta asociada al pago (clave foránea)")
     monto: float = Field(..., description="Monto del pago")
     fecha_pago: date = Field(..., description="Fecha en que se realizó el pago")
     metodo_pago: str = Field(..., description="Método de pago ('efectivo_bs', 'efectvo_usd', 'pago_movil', 'debito', 'transferencia')")
@@ -271,6 +271,7 @@ class Movimiento(BaseModel, MovimientoValidators):
 
     def __repr__(self) -> str:
         return f"Movimiento(ID: {self.id_movimiento}, Producto: {self.cod_producto}, Tipo: {self.tipo_movimiento}, Cant: {self.cant_movida})"
+    
 
 class DetalleVenta(BaseModel, DetalleVentaValidators):
     """
@@ -278,7 +279,7 @@ class DetalleVenta(BaseModel, DetalleVentaValidators):
     Detalle de los productos incluidos en una venta.
     """
     id_detalle: Optional[int] = Field(default=None, description="ID único del detalle de venta (AUTOINCREMENT)")
-    id_venta: int = Field(..., description="ID de la venta a la que pertenece el detalle (clave foránea)")
+    id_venta: Optional[int] = Field(default=None, description="ID de la venta a la que pertenece el detalle (clave foránea)")
     cod_producto: str = Field(..., description="Codigo del producto en el detalle (clave foránea)")
     cantidad_producto: int = Field(..., description="Cantidad del producto vendido")
     precio_unitario: float = Field(..., description="Precio unitario del producto al momento de la venta")
@@ -293,9 +294,13 @@ class DetalleVenta(BaseModel, DetalleVentaValidators):
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> 'DetalleVenta':
-        # Filtra campos None antes de crear la instancia
         filtered_data = {k: v for k, v in data.items() if v is not None}
         return DetalleVenta(**filtered_data)
 
     def __repr__(self) -> str:
         return f"DetalleVenta(ID: {self.id_detalle}, Venta ID: {self.id_venta}, Producto: {self.cod_producto}, Cant: {self.cantidad_producto})"
+
+class VentaTransaccionPayload(BaseModel):
+    venta: Venta
+    detalles: List[DetalleVenta]
+    pago: Pago

@@ -55,27 +55,34 @@ async function handleSubmitSale(ventaCompleta) {
   try {
     console.log('Datos completos a enviar:', ventaCompleta);
     
-    // 1. Primero crear la venta
-    await api.post('/ventas/', ventaCompleta.venta)
-      
-    // Enviar cada detalle por separado
-    for (const detalle of ventaCompleta.detalles) {
-      await api.post('/detalle_venta/', detalle)
-    }
+    // Usar el nuevo endpoint transaccional que maneja todo en una sola operación
+    const response = await api.post('/ventas/registrar', {
+      venta: ventaCompleta.venta,
+      detalles: ventaCompleta.detalles,
+      pago: ventaCompleta.pago
+    })
     
-    await api.post('/pagos/', ventaCompleta.pago)
+    console.log('Venta registrada con ID:', response.data.id_venta);
     
     showSnackbar('Venta registrada correctamente', 'success')
     showSaleDialog.value = false
     cartActions.clearCart() // Limpiar el carrito después de la venta exitosa
+    
   } catch (error) {
-    console.error('Error completo:', error)
+    console.error('Error al registrar la venta:', error)
+    
+    // Manejar errores específicos de la transacción
+    if (error.response?.data?.detail) {
+      showSnackbar(error.response.data.detail, 'error')
+    } else {
+      showSnackbar('Error al registrar la venta', 'error')      // Error genérico
+    }
+    
     handleApiError(error, saleErrors)
   } finally {
     submittingSale.value = false
   }
 }
-
 // Función auxiliar para manejar errores de API
 function handleApiError(error, errorRef) {
   console.log('Error de API:', error)

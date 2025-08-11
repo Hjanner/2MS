@@ -1,6 +1,6 @@
 # Aquí se crean los controladores y routers para cada entidad usando la fábrica genérica
 
-from http.client import HTTPException
+from fastapi import HTTPException
 from backend.models.models import *
 from backend.controllers.controller import *
 from backend.services.transactions.venta_transactions import registrar_venta_con_detalles_y_pago
@@ -31,16 +31,28 @@ def update(cod_producto: str, producto: Producto):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return updated
 
-# @ventas_router.post("/registrar")
-# def registrar_venta(payload: dict):
-#     try:
-#         venta_data = payload['venta']
-#         detalles_data = payload['detalles']
-#         pago_data = payload['pago']
-#         id_venta = registrar_venta_con_detalles_y_pago(venta_data, detalles_data, pago_data, db_path)
-#         return {"id_venta": id_venta}
-#     except Exception as e:
-#         raise HTTPException(status_code=400, detail=str(e))
+@ventas_router.post("/registrar")
+def registrar_venta(payload: VentaTransaccionPayload):
+    try:
+        result = registrar_venta_con_detalles_y_pago(
+            venta_data=payload.venta,
+            detalles_data=payload.detalles,
+            pago_data=payload.pago,
+            db_path=db_path
+        )
+        return result
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "success": False,
+                "error": "Error interno del servidor",
+                "message": str(e)
+            }
+        )
+
 
 @tasasCambio_router.get("/ultima_tasa/", response_model=TasaCambio)
 def get_last_record():
