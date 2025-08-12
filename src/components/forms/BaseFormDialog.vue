@@ -52,7 +52,7 @@ const isEditing = computed(() => props.mode === 'edit');
           color="primary"
           type="submit"
           :loading="loading"
-        >
+          @click="$emit('submit')">
           <v-icon left>
             {{ isEditing ? 'mdi-content-save' : 'mdi-plus' }}
           </v-icon>

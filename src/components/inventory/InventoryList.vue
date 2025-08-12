@@ -16,7 +16,6 @@ const props = defineProps({
     default: false
   }
 });
-
 const emit = defineEmits(['refresh', 'edit']);
 
 // Estado para controlar el modal de detalles

@@ -1,5 +1,5 @@
 <script setup>
-import { inject, toRefs, ref } from 'vue'
+import { inject, toRefs, ref, onMounted } from 'vue'
 import SaleForm from '@/components/sale/SaleForm.vue'
 import { useSnackbar } from '@/composables/useSnackbar'
 import api from '@/api/api'
@@ -44,8 +44,8 @@ async function handlerPay() {
   
   // Cargar tasas antes de abrir el diálogo
   await fetchTasas()
-  showSaleDialog.value = true
-}
+    showSaleDialog.value = true
+  }
 
 // Función para manejar el envío de la venta
 async function handleSubmitSale(ventaCompleta) {
@@ -125,6 +125,10 @@ function closeSaleDialog() {
   showSaleDialog.value = false
   saleErrors.value = {}
 }
+
+onMounted(() => {
+  fetchTasas();  
+});
 </script>
 
 <template>
@@ -142,7 +146,10 @@ function closeSaleDialog() {
       >
         <template #subtitle>
           <span class="text-subtitle-2">
-            USD {{ cartActions.getItemTotal(item.cod_producto).toFixed(2) }}
+            $ {{ cartActions.getItemTotal(item.cod_producto).toFixed(2) }}
+          </span>
+          <span class="text-subtitle-2 text-green"> |
+            Bs {{ (cartActions.getCartTotal() * tasas).toFixed(2) }}          
           </span>
         </template>
 
@@ -184,6 +191,10 @@ function closeSaleDialog() {
           <span class="text-h6">
             USD {{ cartActions.getCartTotal().toFixed(2) }}
           </span>
+          <span class="text-h6 text-green">
+            Bs {{ (cartActions.getCartTotal() * tasas).toFixed(2) }}
+          </span>
+
         </v-row>
 
         <v-row dense>

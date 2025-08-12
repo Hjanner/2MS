@@ -38,7 +38,7 @@ class VentaDetalleService:
         cliente = None
         if venta_data.get('ci_cliente'):
             cliente_data = self._get_single_record(
-                "SELECT * FROM Clientes WHERE ci = ?",
+                "SELECT * FROM Clientes WHERE ci_cliente = ?",
                 (venta_data['ci_cliente'],)
             )
             if cliente_data:
@@ -166,7 +166,7 @@ class VentaDetalleService:
             cliente = None
             if v.get('ci_cliente'):
                 cliente_data = self._get_single_record(
-                    "SELECT * FROM Clientes WHERE ci = ?",
+                    "SELECT * FROM Clientes WHERE ci_cliente = ?",
                     (v['ci_cliente'],)
                 )
                 if cliente_data:

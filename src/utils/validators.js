@@ -82,3 +82,17 @@ export const validateFutureDate = (value) => {
   const today = new Date();
   return date > today || 'La fecha debe ser futura';
 };
+// Validación para cédula de identidad
+export const validateCI = (value) => {
+  if (!value) return 'Cédula es requerida';
+  if (!/^\d+$/.test(value)) return 'Cédula debe ser un número';
+  if (value.length < 6) return 'Cédula muy corta (mín 6 dígitos)';
+  if (value.length > 9) return 'Cédula muy larga (máx 9 dígitos)';
+  return true;
+};
+
+// Validación para departamentos
+export const validateDepartment = (value) => {
+  if (!value) return 'Departamento es requerido';
+  return true;
+};

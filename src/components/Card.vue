@@ -18,7 +18,8 @@
     <v-img
       cover
       height="140"
-      url="item.img"
+      :src="item.img"
+      :alt="item.nombre"
     />
 
     <v-card-item
@@ -29,7 +30,6 @@
       </span>
 
       <br>
-
       <span class="text-grey-darken-2 text-subtitle-2">
         USD {{ item.precio_usd.toFixed(2) }}
       </span>

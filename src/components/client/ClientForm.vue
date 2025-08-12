@@ -1,12 +1,15 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import { DEPARTAMENTOS } from '@/api/data';
+import BaseFormDialog from '@/components/forms/BaseFormDialog.vue';
+import ClientBasicInfo from '@/components/forms/ClientBasicInfo.vue';
+import ClientContactInfo from '@/components/forms/ClientContactInfo.vue';
 
 const props = defineProps({
   show: Boolean,
   title: {
     type: String,
-    default: 'Agregar un Cliente'
+    default: 'Agregar Cliente'
   },
   loading: Boolean,
   clientData: {
@@ -16,6 +19,11 @@ const props = defineProps({
   errors: { 
     type: Object,
     default: () => ({})
+  },
+  mode: {
+    type: String,
+    default: 'add',
+    validator: value => ['add', 'edit'].includes(value)
   }
 });
 
@@ -28,15 +36,15 @@ const client = ref({
   depto_escuela: ''
 });
 
-const localErrors = ref({});        // Estado para los errores de la API
-const searchQuery = ref('');      // Variable para la busqueda
+const localErrors = ref({});
+const isEditing = computed(() => props.mode === 'edit');
 
-//manejo de errores desde la api
+// Manejo de errores
 watch(() => props.errors, (newErrors) => {
-    localErrors.value = { ...newErrors };
+  localErrors.value = { ...newErrors };
 }, { immediate: true });
 
-// Actualizar el formulario cuando cambia clientData
+// Actualizar formulario cuando cambian los datos
 watch(() => props.clientData, (newVal) => {
   if (newVal) {
     client.value = { ...newVal };
@@ -45,31 +53,17 @@ watch(() => props.clientData, (newVal) => {
   }
 }, { immediate: true });
 
-// Filtrar departamentos basado en la búsqueda
-const filteredDepartamentos = computed(() => {
-  if (!searchQuery.value) return DEPARTAMENTOS;
-  
-  const query = searchQuery.value.toLowerCase();
-  return DEPARTAMENTOS.filter(depto => 
-    depto.toLowerCase().includes(query)
-  );
-});
-
 function handleSubmit() {
-  if (!client.value.nombre || !client.value.ci_cliente) return;
-
-  localErrors.value = {};         //limpiar errroes antes de enviar
+  localErrors.value = {};
   emit('update:errors', {});
+  
+  // Validación básica antes de enviar
+  if (!client.value.nombre || !client.value.ci_cliente) {
+    localErrors.value.general = 'Complete los campos requeridos';
+    return;
+  }
 
   emit('submit', client.value);
-    // .then((apiErrors) => {
-    //   if (apiErrors) {
-    //     localErrors.value = apiErrors;
-    //     emit('update:errors', apiErrors);
-    //   } 
-    // });
-
-  resetForm();  
 }
 
 function resetForm() {
@@ -79,7 +73,6 @@ function resetForm() {
     tlf: '',
     depto_escuela: ''
   };
-  searchQuery.value = '';
 }
 
 function close() {
@@ -89,76 +82,45 @@ function close() {
 </script>
 
 <template>
-  <v-dialog 
-    :model-value="show" 
-    @update:model-value="$emit('update:show', $event)"  
-    max-width="500"
+  <BaseFormDialog
+    :show="show"
+    :title="title"
+    :loading="loading"
+    :mode="mode"
+    @update:show="$emit('update:show', $event)"
+    @submit="handleSubmit"
   >
-    <v-card>
-      <v-card-title>{{ title }}</v-card-title>
-      <v-card-text>
-        <v-form @submit.prevent="handleSubmit">
-          <v-text-field
-            v-model="client.nombre"
-            label="Ingresar nombre"
-            required
-            :rules="[v => !!v || 'Nombre es requerido']"
-            :error-messages="localErrors.nombre"
-            class="mb-4"
-          />
-          <v-text-field
-            v-model="client.ci_cliente"
-            label="Ingresar CI"
-            type="number"
-            :rules="[
-              v => !!v || 'CI es requerido',
-              v => /^\d+$/.test(v) || 'CI debe ser un número',
-              v => (v && v.length >= 6) || 'CI debe tener al menos 6 dígitos',
-              v => (v && v.length <= 9) || 'CI debe tener 9 dígitos como máximo'
-            ]"
-            :error-messages="localErrors.ci_cliente"
-          />
-          <v-text-field
-            v-model="client.tlf"
-            label="Ingresar teléfono"
-            type="number"
-            :rules="[
-              v => /^\d+$/.test(v) || 'Teléfono debe ser un número',
-              v => (v && v.length == 11) || 'Teléfono debe tener 11 dígitos', 
-            ]"
-            :error-messages="localErrors.tlf"
-          />
-          
-          <!-- Select con buscador -->
-          <v-autocomplete
-            v-model="client.depto_escuela"
-            v-model:search="searchQuery"
-            :items="filteredDepartamentos"
-            label="Seleccionar departamento"
-            clearable
-            :menu-props="{ maxHeight: '200px' }"
-            :error-messages="localErrors.depto_escuela"
-          />
-        </v-form>
-      </v-card-text>
+    <template #title-append>
+      <v-chip
+        v-if="isEditing"
+        color="primary"
+        variant="tonal"
+        size="small"
+      >
+        <v-icon start>mdi-pencil</v-icon>
+        Editando
+      </v-chip>
+    </template>
 
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn 
-          color="primary" 
-          @click="close"
-        >
-          Cancelar
-        </v-btn>
+    <v-alert
+      v-if="localErrors.general"
+      type="error"
+      variant="tonal"
+      closable
+      class="mb-4"
+    >
+      {{ localErrors.general }}
+    </v-alert>
 
-        <v-btn 
-          color="primary" 
-          @click="handleSubmit"
-          :loading="loading"
-        >
-          Guardar
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <ClientBasicInfo
+      v-model="client"
+      :errors="localErrors"
+    />
+
+    <ClientContactInfo
+      v-model="client"
+      :errors="localErrors"
+      :departamentos="DEPARTAMENTOS"
+    />
+  </BaseFormDialog>
 </template>

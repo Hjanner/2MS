@@ -31,16 +31,30 @@
 
       <v-list-item
         link
-        prepend-icon="mdi-receipt-text-outline"
+        prepend-icon="mdi-cart-variant"
         title="Compras"
         to="/Purchases"
       />
 
       <v-list-item
         link
-        prepend-icon="mdi-receipt-text-outline"
+        prepend-icon="mdi-cash-register"
         title="Ventas"
         to="/Sales"
+      />
+
+      <v-list-item
+        link
+        prepend-icon="mdi-truck-delivery-outline"
+        title="Proveedores"
+        to="/Supplier"
+      />
+
+      <v-list-item
+        link
+        prepend-icon="mdi-tag-multiple-outline"
+        title="Categorías"
+        to="/Category"
       />
     </v-list>
 

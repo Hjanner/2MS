@@ -1,101 +1,3 @@
-<script setup>
-import { ref, computed } from 'vue';
-import ReloadButton from '@/components/common/ReloadButton.vue';
-
-const props = defineProps({
-  ventas: {
-    type: Array,
-    default: () => []
-  },
-  loading: {
-    type: Boolean,
-    default: false
-  }
-});
-
-const emit = defineEmits(['refresh', 'view-details']);
-
-// Headers para la tabla
-const headers = [
-  { title: 'ID Venta', key: 'id_venta', sortable: true },
-  { title: 'Fecha/Hora', key: 'fecha_formateada', sortable: true },
-  { title: 'Tipo', key: 'tipo', sortable: true },
-  { title: 'Monto USD', key: 'monto_total_usd', sortable: true },
-  { title: 'Monto BS', key: 'monto_total_bs', sortable: true },
-  { title: 'Productos', key: 'cantidad_productos', sortable: true },
-  { title: 'Cliente', key: 'cliente', sortable: false },
-//   { title: 'Método Pago', key: 'metodo_pago', sortable: true },
-  { title: 'Acciones', key: 'actions', sortable: false, width: '100px' }
-];
-
-// Computadas para métricas
-const totalVentasUSD = computed(() => {
-  return props.ventas.reduce((total, venta) => total + venta.monto_total_usd, 0);
-});
-
-const totalVentasBS = computed(() => {
-  return props.ventas.reduce((total, venta) => total + venta.monto_total_bs, 0);
-});
-
-const totalProductosVendidos = computed(() => {
-  return props.ventas.reduce((total, venta) => total + venta.cantidad_productos, 0);
-});
-
-// Funciones de formato
-function formatCurrency(amount) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2
-  }).format(amount);
-}
-
-function formatCurrencyBS(amount) {
-  return new Intl.NumberFormat('es-VE', {
-    style: 'currency',
-    currency: 'VES',
-    minimumFractionDigits: 2
-  }).format(amount);
-}
-
-function formatPaymentMethod(method) {
-  const methods = {
-    'efectivo_bs': 'Efectivo BS',
-    'efectivo_usd': 'Efectivo USD',
-    'pago_movil': 'Pago Móvil',
-    'debito': 'Débito',
-    'transferencia': 'Transferencia'
-  };
-  return methods[method] || method;
-}
-
-function getPaymentMethodIcon(method) {
-  const icons = {
-    'efectivo_bs': 'mdi-cash',
-    'efectivo_usd': 'mdi-currency-usd',
-    'pago_movil': 'mdi-cellphone',
-    'debito': 'mdi-credit-card',
-    'transferencia': 'mdi-bank-transfer'
-  };
-  return icons[method] || 'mdi-credit-card';
-}
-
-function getPaymentMethodColor(method) {
-  const colors = {
-    'efectivo_bs': 'green',
-    'efectivo_usd': 'blue',
-    'pago_movil': 'purple',
-    'debito': 'orange',
-    'transferencia': 'teal'
-  };
-  return colors[method] || 'grey';
-}
-
-function viewDetails(venta) {
-  emit('view-details', venta);
-}
-</script>
-
 <template>
   <div class="sales-list">
     <!-- Métricas de ventas -->
@@ -153,9 +55,9 @@ function viewDetails(venta) {
       class="elevation-1"
     >
       <!-- Columna de ID de venta -->
-      <template v-slot:item.id_venta="{ item }">
+      <template v-slot:item.venta.id_venta="{ item }">
         <span class="font-weight-medium text-primary">
-          #{{ item.id_venta }}
+          #{{ item.venta.id_venta }}
         </span>
       </template>
 
@@ -168,30 +70,30 @@ function viewDetails(venta) {
       </template>
 
       <!-- Columna de tipo de venta -->
-      <template v-slot:item.tipo="{ item }">
+      <template v-slot:item.venta.tipo="{ item }">
         <v-chip
-          :color="item.tipo === 'credito' ? 'orange' : 'green'"
+          :color="item.venta.tipo === 'credito' ? 'orange' : 'green'"
           variant="tonal"
           size="small"
         >
           <v-icon start>
-            {{ item.tipo === 'credito' ? 'mdi-credit-card-clock' : 'mdi-cash' }}
+            {{ item.venta.tipo === 'credito' ? 'mdi-credit-card-clock' : 'mdi-cash' }}
           </v-icon>
-          {{ item.tipo === 'credito' ? 'Crédito' : 'De Contado' }}
+          {{ item.venta.tipo === 'credito' ? 'Crédito' : 'De Contado' }}
         </v-chip>
       </template>
 
       <!-- Columna de monto USD -->
-      <template v-slot:item.monto_total_usd="{ item }">
+      <template v-slot:item.venta.monto_total_usd="{ item }">
         <span class="font-weight-medium text-success">
-          {{ formatCurrency(item.monto_total_usd) }}
+          {{ formatCurrency(item.venta.monto_total_usd) }}
         </span>
       </template>
 
       <!-- Columna de monto BS -->
-      <template v-slot:item.monto_total_bs="{ item }">
+      <template v-slot:item.venta.monto_total_bs="{ item }">
         <span class="font-weight-medium">
-          {{ formatCurrencyBS(item.monto_total_bs) }}
+          {{ formatCurrencyBS(item.venta.monto_total_bs) }}
         </span>
       </template>
 
@@ -220,16 +122,16 @@ function viewDetails(venta) {
       </template>
 
       <!-- Columna de método de pago -->
-      <!-- <template v-slot:item.metodo_pago="{ item }">
+      <template v-slot:item.pago.metodo_pago="{ item }">
         <v-chip
-          :color="getPaymentMethodColor(item.pago?.metodo_pago || 'Efectivo BS' )"
+          :color="getPaymentMethodColor(item.pago.metodo_pago)"
           variant="tonal"
           size="small"
         >
-          <v-icon start>{{ getPaymentMethodIcon(item.pago?.metodo_pago || 0) }}</v-icon>
+          <v-icon start>{{ getPaymentMethodIcon(item.pago.metodo_pago) }}</v-icon>
           {{ formatPaymentMethod(item.pago.metodo_pago) }}
         </v-chip>
-      </template> -->
+      </template>
 
       <!-- Columna de acciones -->
       <template v-slot:item.actions="{ item }">
@@ -263,10 +165,124 @@ function viewDetails(venta) {
 
     <!-- Botón de actualizar lista -->
     <ReloadButton :loading="loading" @click="$emit('refresh')" />
+
+    <!-- Modal de detalles de venta -->
+    <SaleDetailModal
+      :show="detailModal.show"
+      :sale-id="detailModal.saleId"
+      @update:show="detailModal.show = $event"
+    />
   </div>
 </template>
 
+<script setup>
+import { ref, computed } from 'vue';
+import ReloadButton from '@/components/common/ReloadButton.vue';
+import SaleDetailModal from '@/components/sale/SaleDetailModal.vue';
 
+const props = defineProps({
+  ventas: {
+    type: Array,
+    default: () => []
+  },
+  loading: {
+    type: Boolean,
+    default: false
+  }
+});
+
+const emit = defineEmits(['refresh', 'view-details']);
+
+// Estado para el modal de detalles
+const detailModal = ref({
+  show: false,
+  saleId: null
+});
+
+// Headers para la tabla
+const headers = [
+  { title: 'ID Venta', key: 'venta.id_venta', sortable: true },
+  { title: 'Fecha/Hora', key: 'fecha_formateada', sortable: true },
+  { title: 'Tipo', key: 'venta.tipo', sortable: true },
+  { title: 'Monto USD', key: 'venta.monto_total_usd', sortable: true },
+  { title: 'Monto BS', key: 'venta.monto_total_bs', sortable: true },
+  { title: 'Productos', key: 'cantidad_productos', sortable: true },
+  { title: 'Cliente', key: 'cliente', sortable: false },
+  { title: 'Método Pago', key: 'pago.metodo_pago', sortable: true },
+  { title: 'Acciones', key: 'actions', sortable: false, width: '100px' }
+];
+
+// Computadas para métricas
+const totalVentasUSD = computed(() => {
+  return props.ventas.reduce((total, resumenVenta) => total + resumenVenta.venta.monto_total_usd, 0);
+});
+
+const totalVentasBS = computed(() => {
+  return props.ventas.reduce((total, resumenVenta) => total + resumenVenta.venta.monto_total_bs, 0);
+});
+
+const totalProductosVendidos = computed(() => {
+  return props.ventas.reduce((total, resumenVenta) => total + resumenVenta.cantidad_productos, 0);
+});
+
+// Funciones de formato
+function formatCurrency(amount) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2
+  }).format(amount);
+}
+
+function formatCurrencyBS(amount) {
+  return new Intl.NumberFormat('es-VE', {
+    style: 'currency',
+    currency: 'VES',
+    minimumFractionDigits: 2
+  }).format(amount);
+}
+
+function formatPaymentMethod(method) {
+  const methods = {
+    'efectivo_bs': 'Efectivo BS',
+    'efectivo_usd': 'Efectivo USD',
+    'pago_movil': 'Pago Móvil',
+    'debito': 'Débito',
+    'transferencia': 'Transferencia'
+  };
+  return methods[method] || method;
+}
+
+function getPaymentMethodIcon(method) {
+  const icons = {
+    'efectivo_bs': 'mdi-cash',
+    'efectivo_usd': 'mdi-currency-usd',
+    'pago_movil': 'mdi-cellphone',
+    'debito': 'mdi-credit-card',
+    'transferencia': 'mdi-bank-transfer'
+  };
+  return icons[method] || 'mdi-credit-card';
+}
+
+function getPaymentMethodColor(method) {
+  const colors = {
+    'efectivo_bs': 'green',
+    'efectivo_usd': 'blue',
+    'pago_movil': 'purple',
+    'debito': 'orange',
+    'transferencia': 'teal'
+  };
+  return colors[method] || 'grey';
+}
+
+function viewDetails(resumenVenta) {
+  detailModal.value = {
+    show: true,
+    saleId: resumenVenta.venta.id_venta
+  };
+  emit('view-details', resumenVenta);
+}
+</script>
 
 <style scoped>
 .sales-list {

@@ -3,8 +3,10 @@
   import { useRoute } from 'vue-router'
   import { useFetch } from '@/composables/useFetch.js'
   import { useSearchTerm } from '@/composables/useSearchTerm.js'
+  import GuardarTasaBtn from './home/GuardarTasaBtn.vue'
 
-  const { data, error } = useFetch('http://127.0.0.1:8000/tasas_cambio/ultima_tasa/')
+  import { ref } from 'vue'
+  const { data, error, execute } = useFetch('http://127.0.0.1:8000/tasas_cambio/ultima_tasa/')
   const tasa = computed(() => data.value?.valor_usd_bs || '')
 
   const { searchTerm, clearSearchTerm } = useSearchTerm()
@@ -21,6 +23,7 @@
       <span class="text-h6 ">
         Sistema 2MS
       </span>
+
 
       <template v-if="route.path === '/'">
         <v-text-field
@@ -57,5 +60,10 @@
         <b>Cargando tasa...</b>
       </span>
     </template>
+
+    <GuardarTasaBtn 
+      @tasa-guardada="execute()"
+    />
+
   </v-app-bar>
 </template>

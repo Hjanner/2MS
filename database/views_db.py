@@ -116,7 +116,7 @@ JOIN
     Productos p ON dv.cod_producto = p.cod_producto;
 """
 
-#-- Vista para resumen de ventas (ResumenVenta)
+#-- Vista para resumen de ventas (ResumenVenta) se usa para listar
 VENTA_RESUMEN_VIEW = """
 -- Vista para resumen de ventas (ResumenVenta)
 CREATE VIEW vista_resumen_ventas AS

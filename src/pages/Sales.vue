@@ -1,11 +1,12 @@
-
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import SaleList from '@/components/sale/SaleList.vue';
 import SearchFilter from '@/components/common/SearchFilter.vue'; 
 import api from '@/api/api';
+import {getFirstAndLastDayOfMonth} from '@/utils/formatters.js';
 
+const { firstDay, lastDay } = getFirstAndLastDayOfMonth();
 const ventas = ref([]);
 const filteredVentas = ref([]);
 const loading = ref(false);
@@ -14,14 +15,16 @@ const { showSnackbar } = useSnackbar();
 async function fetchSales() {
   loading.value = true;
   try {
-    const response = await api.get('/ventas');    
-    // Asumo que el endpoint retorna una lista de ResumenVenta
-    ventas.value = response.data;    
-        console.log(ventas);
-
+    // Usar el endpoint correcto con parámetros opcionales
+    const response = await api.get('/ventas/listar/', {
+      params: {
+        fecha_inicio: firstDay,
+        fecha_fin: lastDay,
+        limit: 100
+      }
+    });
+    ventas.value = response.data;
     filteredVentas.value = ventas.value;
-    console.log('primera vuelta se envia', filteredVentas.value);
-    
   } catch (error) {
     const message = error.response?.data?.message || 'Error al cargar las ventas';
     showSnackbar(message, 'error');
@@ -34,16 +37,12 @@ function handleViewDetails(venta) {
   // Aquí implementaremos la navegación al detalle o apertura del modal
   console.log('Ver detalles de venta:', venta.venta.id_venta);
   // TODO: Implementar navegación o modal de detalles
+  // Ejemplo: router.push(`/ventas/${venta.venta.id_venta}`)
 }
 
 // Manejar los datos filtrados del componente de búsqueda
 function handleFilteredData(filtered) {
   filteredVentas.value = filtered;
-  if (filtered.length === 0) {
-    showSnackbar('No se encontraron resultados', 'info');
-  } else {
-    showSnackbar(`Se encontraron ${filtered.length} resultados`, 'success');
-  }
 }
 
 // Función para refrescar datos
@@ -72,8 +71,8 @@ onMounted(async () => {
               <!-- Componente de búsqueda -->
               <SearchFilter
                 :data="ventas"
-                :search-fields="['id_venta', 'monto_total_usd', 'monto_total_bs', 'tipo', 'fecha_formateada', 'metodo_pago']"
-                placeholder="Buscar por ID, monto, tipo, fecha o método de pago..."
+                :search-fields="['venta.id_venta', 'venta.monto_total_usd', 'venta.monto_total_bs', 'venta.tipo', 'fecha_formateada', 'pago.metodo_pago', 'cliente.nombre', 'cliente.ci_cliente']"
+                placeholder="Buscar por ID, monto, tipo, fecha, método de pago o cliente..."
                 :show-field-filter="true"
                 result-text="ventas"
                 @filtered="handleFilteredData"
@@ -92,7 +91,6 @@ onMounted(async () => {
     </v-container> 
   </div>
 </template>
-
 
 <style scoped>
 .sales-page {

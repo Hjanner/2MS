@@ -35,3 +35,23 @@ export function getCurrentDate() {
 export function getCurrentTimeStamp () {
     return Date.now();
 }
+
+export function getFirstAndLastDayOfMonth() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  const format = (date) => {
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    return `${d}/${m}/${y}`;
+  };
+
+  return {
+    firstDay: format(firstDay),
+    lastDay: format(lastDay),
+  };
+}
