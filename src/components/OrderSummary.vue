@@ -24,13 +24,13 @@ const tasas = ref(0)
 // Función para obtener tasas de cambio
 async function fetchTasas() {
   try {
-    const response = await api.get('/dolar')
+    const response = await api.get('/tasas_cambio/ultima_tasa/')
     tasas.value = response.data.valor_usd_bs
     console.log('Tasa obtenida:', tasas.value);
   } catch (error) {
     console.error('Error al cargar tasas:', error)
     showSnackbar('Error al cargar las tasas de cambio', 'error')
-    // Valor por defecto si falla
+    // Valor por defecto si falla ojito
     tasas.value = 36.50
   }
 }

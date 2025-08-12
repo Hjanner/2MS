@@ -278,7 +278,6 @@ class BaseService:
             cursor.execute(f"SELECT * FROM {self.table_name} ORDER BY {id_field} DESC LIMIT 1")
             
             row = cursor.fetchone()
-            print('ooooooooooooooooo', row)
             if row:
                 return self.model.from_dict(dict(zip([col[0] for col in cursor.description], row)))
             return None

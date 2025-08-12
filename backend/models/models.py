@@ -272,7 +272,6 @@ class Movimiento(BaseModel, MovimientoValidators):
     def __repr__(self) -> str:
         return f"Movimiento(ID: {self.id_movimiento}, Producto: {self.cod_producto}, Tipo: {self.tipo_movimiento}, Cant: {self.cant_movida})"
     
-
 class DetalleVenta(BaseModel, DetalleVentaValidators):
     """
     Modelo para la tabla 'Detalle_Venta' .

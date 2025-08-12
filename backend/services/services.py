@@ -1,8 +1,12 @@
 from backend.models.models import *
-from backend.models.view_models import ProductoVistaBase
-from backend.services.comprasDetalle_service import CompraService
+
 from database.database import db_path
 from backend.services.base_service import BaseService
+
+from backend.models.view_models import ProductoVistaBase
+from backend.services.ventaDetalle_services import VentaDetalleService
+from backend.services.comprasDetalle_service import CompraService
+
 
 cliente_service = BaseService(Cliente, "Clientes", db_path, unique_fields=["ci_cliente"])
 proveedor_service = BaseService(Proveedor, "Proveedores", db_path)
@@ -20,3 +24,4 @@ producto_no_preparado_service = BaseService(ProductoNoPreparado, "Productos_noPr
 
 vistaProductos_service = BaseService(ProductoVistaBase, "vista_productos_completos", db_path)
 vistaCompras_service = CompraService(db_path)
+vistaVentas_services = VentaDetalleService(db_path)

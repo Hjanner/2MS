@@ -135,3 +135,6 @@ class BaseController(Generic[T]):
                 productos.append(ProductoVistaBase(**prod))
         
         return productos
+
+    def get_last_record(self, id_field: str ) -> Any:
+        return self.service.get_last_record(id_field)

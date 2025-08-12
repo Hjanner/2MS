@@ -4,7 +4,7 @@
   import { useFetch } from '@/composables/useFetch.js'
   import { useSearchTerm } from '@/composables/useSearchTerm.js'
 
-  const { data, error } = useFetch('http://127.0.0.1:8000/dolar')
+  const { data, error } = useFetch('http://127.0.0.1:8000/tasas_cambio/ultima_tasa/')
   const tasa = computed(() => data.value?.valor_usd_bs || '')
 
   const { searchTerm, clearSearchTerm } = useSearchTerm()

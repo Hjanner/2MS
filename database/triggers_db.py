@@ -85,6 +85,7 @@ BEGIN
     );
 END;
 """
+
 VENTA_COMPLETA_TRIGGER = """
 -- Trigger para actualizar inventario después de venta
 CREATE TRIGGER IF NOT EXISTS tr_after_venta_completa

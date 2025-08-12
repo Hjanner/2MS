@@ -13,7 +13,6 @@
     items.value.filter(i => matchesSearchTerm(i.nombre)),
   )
 
-
   const selectedItems = computed(() => {
     const cartItems = getCart()
     const cartProductIds = Object.keys(cartItems)

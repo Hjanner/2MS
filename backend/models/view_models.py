@@ -1,6 +1,6 @@
 from typing import Optional, Union, List
 from pydantic import BaseModel, Field
-from .models import Compra, Proveedor, Producto, ProductoNoPreparado, Movimiento
+from .models import Cliente, Compra, DetalleVenta, Pago, ProductoBase, Proveedor, Producto, ProductoNoPreparado, Movimiento, TasaCambio, Venta
 
 
 class ProductoVistaBase(BaseModel):
@@ -45,3 +45,29 @@ class ResumenCompra(BaseModel):
     proveedor: Proveedor
     cantidad_productos: int = Field(..., description="Cantidad de productos diferentes en la compra")
     fecha_formateada: str = Field(..., description="Fecha formateada como DD/MM/YYYY")
+    
+# MODELO DE VISTA PARA DETALLES DE VENTA
+class DetalleProductoVenta(BaseModel):
+    """Modelo que combina información de producto y su detalle en la venta"""
+    producto: ProductoBase
+    detalle_venta: DetalleVenta
+    
+class DetalleVentaCompleto(BaseModel):
+    """Modelo completo para el detalle de una venta"""
+    venta: Venta
+    cliente: Optional[Cliente] = Field(None, description="Datos del cliente si existe")
+    productos: List[DetalleProductoVenta]
+    pago: Pago
+    tasa_cambio: Optional[TasaCambio] = Field(None, description="Tasa de cambio usada si aplica")
+    fecha_formateada: str = Field(..., description="Fecha formateada como DD/MM/YYYY")
+    hora_formateada: str = Field(..., description="Hora formateada como HH:MM")
+
+class ResumenVenta(BaseModel):
+    """Modelo para resumen de venta (sin detalles de productos)"""
+    venta: Venta
+    cliente: Optional[Cliente] = Field(None, description="Datos del cliente si existe")
+    cantidad_productos: int = Field(..., description="Cantidad total de productos vendidos (suma de cantidades)")
+    pago: Pago
+    fecha_formateada: str = Field(..., description="Fecha formateada como DD/MM/YYYY")
+    hora_formateada: str = Field(..., description="Hora formateada como HH:MM")
+ 

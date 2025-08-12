@@ -24,13 +24,6 @@
 
       <v-list-item
         link
-        prepend-icon="mdi-cart"
-        title="Productos"
-        to="/Products"
-      />
-
-      <v-list-item
-        link
         prepend-icon="mdi-account-group"
         title="Clientes"
         to="/Clients"
@@ -41,6 +34,13 @@
         prepend-icon="mdi-receipt-text-outline"
         title="Compras"
         to="/Purchases"
+      />
+
+      <v-list-item
+        link
+        prepend-icon="mdi-receipt-text-outline"
+        title="Ventas"
+        to="/Sales"
       />
     </v-list>
 
