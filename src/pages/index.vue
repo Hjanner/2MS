@@ -3,6 +3,7 @@
   import { useCart } from '@/composables/useCart.js'
   import { useFetch } from '@/composables/useFetch.js'
   import { useSearchTerm } from '@/composables/useSearchTerm.js'
+  import { useRoute } from 'vue-router'
 
   const { data, error } = useFetch('http://127.0.0.1:8000/productos/')
   const items = computed(() => data.value || [])
@@ -37,9 +38,14 @@
     items.value.filter(i => i.cod_producto in getCart()),
   )
 
+  const route = useRoute()
+
   onUnmounted(() => {
+    if (route.path !== '/' && route.path !== '/Checkout') {
+      clearCart()
+    }
+
     clearSearchTerm()
-    clearCart()
   })
 </script>
 
@@ -56,5 +62,5 @@
     <SkeletonGrid />
   </template>
 
-  <OrderSummary :selected-items="selectedItems" />
+  <OrderDetails :selected-items="selectedItems" />
 </template>

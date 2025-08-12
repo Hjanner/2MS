@@ -1,13 +1,16 @@
 <script setup>
   import { useSnackbar } from '@/composables/useSnackbar'
+  import { useRoute } from 'vue-router'
 
   const { snackbar } = useSnackbar()
+
+  const route = useRoute()
 </script>
 
 <template>
   <v-app>
     <Appbar />
-    <Sidebar />
+    <Sidebar v-if="route.path !== '/Checkout'"/>
     <v-main>
       <router-view />
       <v-snackbar

@@ -20,6 +20,7 @@ declare module 'vue' {
     InventoryList: typeof import('./src/components/inventory/InventoryList.vue')['default']
     InventoryMetrics: typeof import('./src/components/inventory/InventoryMetrics.vue')['default']
     LowStockAlert: typeof import('./src/components/inventory/LowStockAlert.vue')['default']
+    OrderDetails: typeof import('./src/components/OrderDetails.vue')['default']
     OrderSummary: typeof import('./src/components/OrderSummary.vue')['default']
     ProductBasicInfo: typeof import('./src/components/forms/ProductBasicInfo.vue')['default']
     ProductDetailRow: typeof import('./src/components/product/ProductDetailRow.vue')['default']

@@ -43,7 +43,5 @@
         to="/Purchases"
       />
     </v-list>
-
-
   </v-navigation-drawer>
 </template>

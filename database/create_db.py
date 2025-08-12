@@ -1,12 +1,8 @@
 import sqlite3
-from insert_db import insert_data
-from views_db import create_views
-from triggers_db import create_triggers
 from database import db_name, db_path
 
 print("Nombre de la base de datos:", db_name)
 print("Ruta de la base de datos:", db_path)
-
 
 # Todas las sentencias CREATE TABLE
 schema = """
@@ -146,6 +142,3 @@ def create_database():
 
 if __name__ == "__main__":
     create_database()
-    # insert_data()
-    # create_views()
-    # create_triggers()

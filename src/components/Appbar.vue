@@ -18,7 +18,7 @@
     :elevation="0"
   >
     <template #prepend>
-      <span class="text-h6 ">
+      <span class="text-h6">
         Sistema 2MS
       </span>
 
@@ -41,20 +41,20 @@
     </template>
 
     <template v-if="error">
-      <span class="text-grey-darken-1 text-subtitle-1">
-        <b>Tasa no disponible</b>
+      <span class="font-weight-bold text-grey-darken-1 text-subtitle-1">
+        Tasa no disponible
       </span>
     </template>
 
     <template v-else-if="tasa">
-      <span class="text-grey-darken-1 text-subtitle-1">
-        <b>USD 1 = VED {{ tasa }}</b>
+      <span class="font-weight-bold text-grey-darken-1 text-subtitle-1">
+        USD 1 = VED {{ tasa }}
       </span>
     </template>
 
     <template v-else>
-      <span class="text-grey-darken-1 text-subtitle-1">
-        <b>Cargando tasa...</b>
+      <span class="font-weight-bold text-grey-darken-1 text-subtitle-1">
+        Cargando tasa...
       </span>
     </template>
   </v-app-bar>
