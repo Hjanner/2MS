@@ -65,6 +65,25 @@ def get_last_record():
         raise HTTPException(status_code=404, detail="Tasa de cambio no encontrada")
     return ultima_tasa
 
+@tasasCambio_router.get("/listar/", response_model=List[TasaCambio])
+def get_list(
+    fecha_inicio: Optional[str] = None,
+    fecha_fin: Optional[str] = None,
+):
+    try:
+        return tasasCambio_controller.get_list_from_date(
+            fecha_inicio=fecha_inicio,
+            fecha_fin=fecha_fin,
+        )
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al obtener lista de tasas del mes cursante: {str(e)}"
+        )
+
+
 @ventas_router.get("/detalle/{id_venta}", response_model=DetalleVentaCompleto)
 def get_sale_detail(id_venta: int):
     try:
@@ -104,6 +123,7 @@ def list_ventas(
             detail=f"Error al obtener lista de venta: {str(e)}"
         )
         
+    
 # @ventas_router.get("/producto/{cod_producto}", response_model=List[DetalleProductoVenta])
 # async def buscar_ventas_por_producto(
 #     cod_producto: str,

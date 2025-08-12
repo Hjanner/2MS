@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional, TypeVar, Generic, Dict, Any
 from fastapi import HTTPException
 from backend.models.view_models import ProductoVistaBase, ProductoVistaNoPreparado, ProductoVistaPreparado
@@ -138,3 +139,14 @@ class BaseController(Generic[T]):
 
     def get_last_record(self, id_field: str ) -> Any:
         return self.service.get_last_record(id_field)
+    
+    def get_list_from_date(
+        self, 
+        fecha_inicio: Optional[str] = None,
+        fecha_fin: Optional[str] = None
+    ) -> List[Any]:
+        result = self.service.get_data_from_date(
+            fecha_inicio=fecha_inicio,
+            fecha_fin=fecha_fin
+        )
+        return result if result is not None else []

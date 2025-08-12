@@ -56,6 +56,13 @@
         title="Categorías"
         to="/Category"
       />
+
+      <v-list-item
+        link
+        prepend-icon="mdi-currency-usd"
+        title="Tasas de Cambio"
+        to="/ExchangeRate"
+      />
     </v-list>
 
 

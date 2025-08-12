@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import sqlite3
 from typing import Type, List, Optional, Any, Dict
@@ -78,6 +79,7 @@ class BaseService:
         self.db_path = db_path
         self.unique_fields = unique_fields or []
 
+
     def get_all(self) -> List[Any]:
         """
         Obtiene todos los registros de la tabla.
@@ -88,6 +90,7 @@ class BaseService:
             cursor.execute(f"SELECT * FROM {self.table_name}")
             rows = cursor.fetchall()
             return [self.model.from_dict(dict(zip([col[0] for col in cursor.description], row))) for row in rows]
+
 
     def get_by_id(self, id_field: str, id_value: Any) -> Optional[Any]:
         """
@@ -292,3 +295,45 @@ class BaseService:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM vista_productos_completos")
             return [dict(row) for row in cursor.fetchall()]
+
+#FILTROS
+    def get_data_from_date(
+        self, 
+        fecha_inicio: Optional[str] = None,
+        fecha_fin: Optional[str] = None,
+        ) -> List[Any]:
+        """
+        Obtiene los datos filtrados por rango de fechas.
+        :return: Lista de instancias del modelo o lista vacía si no hay datos.
+        """
+        query = f"SELECT * FROM {self.table_name}"
+        params = []
+        
+        conditions = []
+        
+        if fecha_inicio:
+            conditions.append("fecha >= ?")
+            params.append(datetime.strptime(fecha_inicio, "%d/%m/%Y").isoformat())
+        
+        if fecha_fin:
+            conditions.append("fecha <= ?")
+            params.append(datetime.strptime(fecha_fin, "%d/%m/%Y").isoformat())
+        
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+        
+        query += " ORDER BY fecha DESC"
+        
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            
+            if rows:
+                # Crear una lista de objetos del modelo
+                return [self.model.from_dict(dict(row)) for row in rows]
+            return []  # Retornar lista vacía en lugar de None
+
+            
+            
