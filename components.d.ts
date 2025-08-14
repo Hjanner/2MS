@@ -23,6 +23,7 @@ declare module 'vue' {
     ClientDelete: typeof import('./src/components/client/ClientDelete.vue')['default']
     ClientForm: typeof import('./src/components/client/ClientForm.vue')['default']
     ClientList: typeof import('./src/components/client/ClientList.vue')['default']
+    DebtList: typeof import('./src/components/debt/DebtList.vue')['default']
     ExchaneRateForm: typeof import('./src/components/exchange/ExchangeRateForm.vue')['default']
     ExchangeRateForm: typeof import('./src/components/exchange/ExchangeRateForm.vue')['default']
     ExchangeRateList: typeof import('./src/components/exchange/ExchangeRateList.vue')['default']

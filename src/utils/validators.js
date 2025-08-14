@@ -53,8 +53,8 @@ export const validateImage = (value) => {
 
 export const validateRIF = (value) => {
   if (!value) return true; // Opcional
-  if (!/^[JGVEP]-?\d{8}-?\d$/.test(value)) {
-    return 'Formato de RIF inválido (ej: J-12345678-9)';
+  if (!/^[JGVEP]\d{9}\d$/.test(value)) {
+    return 'Formato de RIF inválido (ej: J12345678)';
   }
   return true;
 };

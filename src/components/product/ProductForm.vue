@@ -170,7 +170,7 @@ const formattedCategorias = computed(() => {
   }));
 });
 
-function handleSubmit() {
+function handleSubmit() {  
   localErrors.value = {};           // Resetear errores
   
   // Validar campos comunes
@@ -190,7 +190,6 @@ function handleSubmit() {
       validatePositiveNumber('Cantidad actual')(noPreparadoData.value.cant_actual),
       validateCost(noPreparadoData.value.costo_compra),
       validateRequired('Unidad de medida')(noPreparadoData.value.unidad_medida),
-      validateRIF(noPreparadoData.value.Rif)
     ].every(result => result === true);
 
     if (!inventoryFieldsValid) return;

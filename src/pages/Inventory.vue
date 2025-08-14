@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useSnackbar } from '@/composables/useSnackbar';
+import { useApiErrorHandler } from '@/composables/useApiErrorHandler';
 import InventoryList from '@/components/inventory/InventoryList.vue';
 import AdjustmentForm from '@/components/inventory/AdjustmentForm.vue';
 import SearchFilter from '@/components/common/SearchFilter.vue'; 
@@ -11,6 +12,7 @@ const productos = ref([]);
 const filteredProductos = ref([]);
 const loading = ref(false);
 const { showSnackbar } = useSnackbar();
+const { handleApiError, handleSuccess } = useApiErrorHandler();
 const addingProduct = ref(false);
 const showAddDialog = ref(false);
 const addProductErrors = ref({});
@@ -24,14 +26,12 @@ const adjustingInventory = ref(false);
 const adjustInventoryErrors = ref({});
 const currentAdjustProduct = ref(null);
 
-
-
 async function fetchCategorias() {
   try {
     const response = await api.get('/categoria_productos');
     categorias.value = response.data;
   } catch (error) {
-    showSnackbar('Error al cargar categorías', 'error');
+    handleApiError(error);
   }
 }
 
@@ -45,8 +45,7 @@ async function fetchProducts() {
     }));
     filteredProductos.value = productos.value;
   } catch (error) {
-    const message = error.response?.data?.message || 'Error al cargar los productos';
-    showSnackbar(message, 'error');
+    handleApiError(error);
   } finally { 
     loading.value = false;
   }
@@ -97,7 +96,7 @@ async function handleAddProduct(productData) {
     await api.post(endpointTipo, productoTipo);
     await fetchProducts();
     showAddDialog.value = false;
-    showSnackbar(`Producto ${productData.tipo_producto === 'noPreparado' ? 'no preparado' : 'preparado'} agregado correctamente`, 'success');
+    handleSuccess(`Producto ${productData.tipo_producto === 'noPreparado' ? 'no preparado' : 'preparado'} agregado correctamente`);
   } catch (error) {
     handleApiError(error, addProductErrors);
   } finally {
@@ -113,7 +112,6 @@ async function handlerEditProduct(productData) {
     let endpointTipo;
     let productoBase;
     let productoTipo;
-
 
     // Determinar endpoint según el tipo de producto
     if (productData.tipo_producto === 'noPreparado') {
@@ -153,7 +151,7 @@ async function handlerEditProduct(productData) {
     await fetchProducts();
     showEditDialog.value = false;
     currentProduct.value = null;
-    showSnackbar(`Producto ${productData.tipo_producto === 'noPreparado' ? 'no preparado' : 'preparado'} editado correctamente`, 'success');
+    handleSuccess(`Producto ${productData.tipo_producto === 'noPreparado' ? 'no preparado' : 'preparado'} editado correctamente`);
   } catch (error) {
     handleApiError(error, editProductErrors);
   } finally {
@@ -166,58 +164,14 @@ function handleEditClick(producto) {
   showEditDialog.value = true;
 }
 
-// Función auxiliar para manejar errores de API
-function handleApiError(error, errorRef) {
-  console.log('Error de API:', error);
-  
-  if (error.response) {
-    const backendErrors = {};
-
-    if (error.response?.data?.detail) {
-      const errorDetail = error.response.data.detail;
-
-      if (Array.isArray(errorDetail)) {
-        // Múltiples errores de validación
-        errorDetail.forEach(err => {
-          if (err.loc && err.loc.length > 1) {
-            backendErrors[err.loc[1]] = err.msg;
-          }
-        });
-      } else if (typeof errorDetail === 'object' && errorDetail.field) {
-        // Error de campo específico
-        backendErrors[errorDetail.field] = errorDetail.message;
-      } else if (typeof errorDetail === 'string') {
-        // Error general
-        backendErrors.general = errorDetail;
-      }
-
-      errorRef.value = backendErrors;
-      const errorMessages = Object.values(backendErrors).join(', ');
-      showSnackbar(errorMessages || 'Ocurrió un error inesperado.', 'error');
-    } else {
-      const message = error.response.data?.message || `Error del servidor: ${error.response.status}`;
-      showSnackbar(message, 'error');
-    }
-  } else if (error.request) {
-    console.log('Error de red:', error.request);
-    showSnackbar('Error de conexión con el servidor', 'error');
-  } else {
-    console.log('Error:', error.message);
-    showSnackbar('Error inesperado: ' + error.message, 'error');
-  }
-}
-
-// Manejar los datos filtrados del componente de búsqueda
 function handleFilteredData(filtered) {
   filteredProductos.value = filtered;
 }
 
-// Función para refrescar datos
 function handleRefresh() {
   fetchProducts();
 }
 
-// Cerrar diálogos y limpiar errores
 function closeAddDialog() {
   showAddDialog.value = false;
   addProductErrors.value = {};
@@ -229,16 +183,15 @@ function closeEditDialog() {
   currentProduct.value = null;
 }
 
-
 async function handleInventoryAdjustment(movimientoData) {
   adjustingInventory.value = true;
   adjustInventoryErrors.value = {};  
   try {
     await api.post('/movimientos', movimientoData);
-    await fetchProducts(); // Refrescar la lista de productos
+    await fetchProducts();
     showAdjustDialog.value = false;
     currentAdjustProduct.value = null;
-    showSnackbar('Ajuste de inventario realizado correctamente', 'success');
+    handleSuccess('Ajuste de inventario realizado correctamente');
   } catch (error) {
     handleApiError(error, adjustInventoryErrors);
   } finally {
@@ -246,13 +199,11 @@ async function handleInventoryAdjustment(movimientoData) {
   }
 }
 
-// función para manejar el click del botón de ajustar
 function handleAdjustClick(producto) {
   currentAdjustProduct.value = producto;
   showAdjustDialog.value = true;
 }
 
-// función para cerrar el diálogo de ajuste
 function closeAdjustDialog() {
   showAdjustDialog.value = false;
   adjustInventoryErrors.value = {};
@@ -286,7 +237,6 @@ onMounted(async () => {
             </v-card-title>
             
             <v-card-text>
-              <!-- Componente de búsqueda -->
               <SearchFilter
                 :data="productos"
                 :search-fields="['nombre', 'categoria_descr', 'cod_producto', 'cant_actual', 'precio_usd']"
@@ -311,40 +261,40 @@ onMounted(async () => {
     </v-container> 
   </div>
 
-    <!-- Add Product Dialog -->
-    <ProductForm
-      v-model:show="showAddDialog"
-      :loading="addingProduct"
-      title="Agregar Nuevo Producto"
-      :categorias="categorias"
-      :errors="addProductErrors"
-      mode="add"
-      @submit="handleAddProduct"
-      @update:show="closeAddDialog"
-    />
+  <!-- Add Product Dialog -->
+  <ProductForm
+    v-model:show="showAddDialog"
+    :loading="addingProduct"
+    title="Agregar Nuevo Producto"
+    :categorias="categorias"
+    :errors="addProductErrors"
+    mode="add"
+    @submit="handleAddProduct"
+    @update:show="closeAddDialog"
+  />
 
-    <!-- Edit Product Dialog -->
-    <ProductForm
-      v-model:show="showEditDialog"
-      :loading="editingProduct"
-      :product-data="currentProduct"
-      :categorias="categorias"
-      title="Editar Producto"
-      :errors="editProductErrors"
-      mode="edit"
-      @submit="handlerEditProduct"
-      @update:show="closeEditDialog"
-    />      
+  <!-- Edit Product Dialog -->
+  <ProductForm
+    v-model:show="showEditDialog"
+    :loading="editingProduct"
+    :product-data="currentProduct"
+    :categorias="categorias"
+    title="Editar Producto"
+    :errors="editProductErrors"
+    mode="edit"
+    @submit="handlerEditProduct"
+    @update:show="closeEditDialog"
+  />      
 
-    <!-- Inventory Adjustment Dialog -->
-    <AdjustmentForm
-      v-model:show="showAdjustDialog"
-      :loading="adjustingInventory"
-      :product-data="currentAdjustProduct"
-      :errors="adjustInventoryErrors"
-      @submit="handleInventoryAdjustment"
-      @update:show="closeAdjustDialog"
-    />
+  <!-- Inventory Adjustment Dialog -->
+  <AdjustmentForm
+    v-model:show="showAdjustDialog"
+    :loading="adjustingInventory"
+    :product-data="currentAdjustProduct"
+    :errors="adjustInventoryErrors"
+    @submit="handleInventoryAdjustment"
+    @update:show="closeAdjustDialog"
+  />
 </template>
 
 <style scoped>

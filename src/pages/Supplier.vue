@@ -1,10 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useApiErrorHandler } from '@/composables/useApiErrorHandler';
-import { useSnackbar } from '@/composables/useSnackbar';
 import SupplierList from '@/components/supplier/SupplierList.vue';
 import SupplierForm from '@/components/supplier/SupplierForm.vue';
-// import SupplierDelete from '@/components/supplier/SupplierDelete.vue';
 import SearchFilter from '@/components/common/SearchFilter.vue'; 
 import api from '@/api/api.js';
 
@@ -19,7 +17,6 @@ const formErrors = ref({});
 const currentSupplier = ref(null);
 
 const { handleApiError, handleSuccess } = useApiErrorHandler();
-const { showSnackbar } = useSnackbar();
 
 async function fetchProveedores() {
   loading.value = true;

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useSnackbar } from '@/composables/useSnackbar';
+import { useApiErrorHandler } from '@/composables/useApiErrorHandler';
 import ComprasList from '@/components/purchase/PurchasesList.vue';
 import SearchFilter from '@/components/common/SearchFilter.vue'; 
 import PurchaseForm from '@/components/purchase/PurchaseForm.vue';
@@ -15,6 +15,8 @@ const showAddDialog = ref(false);
 const addCompraErrors = ref({});
 const proveedores = ref([]);
 const productos = ref([]);
+
+const { handleApiError, handleSuccess } = useApiErrorHandler();
 
 // Fetch proveedores para el formulario
 async function fetchProveedores() {
@@ -76,7 +78,6 @@ async function addMovimiento(productData, id_currentCompra) {
     }
 }
 
-// Manejar agregar nueva compra
 async function handleAddCompra(compraData) {
   addingCompra.value = true;
   addCompraErrors.value = {};
@@ -97,52 +98,11 @@ async function handleAddCompra(compraData) {
     });
     await fetchCompras();
     showAddDialog.value = false;
-    showSnackbar('Compra registrada correctamente', 'success');
+    handleSuccess('Compra registrada correctamente');
   } catch (error) {
     handleApiError(error, addCompraErrors);
   } finally {
     addingCompra.value = false;
-  }
-}
-
-// Función auxiliar para manejar errores de API
-function handleApiError(error, errorRef) {
-  console.log('Error de API:', error);
-  
-  if (error.response) {
-    const backendErrors = {};
-
-    if (error.response?.data?.detail) {
-      const errorDetail = error.response.data.detail;
-
-      if (Array.isArray(errorDetail)) {
-        // Múltiples errores de validación
-        errorDetail.forEach(err => {
-          if (err.loc && err.loc.length > 1) {
-            backendErrors[err.loc[1]] = err.msg;
-          }
-        });
-      } else if (typeof errorDetail === 'object' && errorDetail.field) {
-        // Error de campo específico
-        backendErrors[errorDetail.field] = errorDetail.message;
-      } else if (typeof errorDetail === 'string') {
-        // Error general
-        backendErrors.general = errorDetail;
-      }
-
-      errorRef.value = backendErrors;
-      const errorMessages = Object.values(backendErrors).join(', ');
-      showSnackbar(errorMessages || 'Ocurrió un error inesperado.', 'error');
-    } else {
-      const message = error.response.data?.message || `Error del servidor: ${error.response.status}`;
-      showSnackbar(message, 'error');
-    }
-  } else if (error.request) {
-    console.log('Error de red:', error.request);
-    showSnackbar('Error de conexión con el servidor', 'error');
-  } else {
-    console.log('Error:', error.message);
-    showSnackbar('Error inesperado: ' + error.message, 'error');
   }
 }
 

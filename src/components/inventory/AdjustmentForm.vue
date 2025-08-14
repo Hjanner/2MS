@@ -62,7 +62,7 @@ const previewResult = computed(() => {
 // Manejar envío del formulario
 function handleSubmit() {
   if (!validateForm()) return;
-  
+    
   const movimientoData = {
     cod_producto: props.productData.cod_producto,
     referencia: formData.value.tipo_movimiento === 'entrada' ? 'ajuste' : formData.value.referencia,

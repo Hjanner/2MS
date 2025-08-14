@@ -1,92 +1,78 @@
-import { useSnackbar } from './useSnackbar';
+import { useSnackbar } from '@/composables/useSnackbar';
 
+/**
+ * Composable para manejar errores de API de forma consistente en toda la aplicación.
+ * Proporciona funciones para manejar errores y mostrar mensajes de éxito.
+ */
 export function useApiErrorHandler() {
   const { showSnackbar } = useSnackbar();
 
   /**
-   * Maneja errores de API de manera unificada
-   * @param {Error} error - Objeto de error
-   * @param {Ref<Object>} [errorsRef] - Referencia reactiva para errores de formulario
-   * @returns {Object} - Objeto con errores estructurados
+   * Maneja errores de API y los asigna a un objeto de errores de referencia si se proporciona.
+   * @param {Error} error - El objeto de error capturado
+   * @param {Ref<Object>} [errorRef] - Referencia opcional a un objeto de errores para asignar errores de validación
+   * @param {Object} [options] - Opciones adicionales
+   * @param {boolean} [options.showSnackbar=true] - Controla si se muestra el snackbar de error
    */
-  const handleApiError = (error, errorsRef = null) => {
-    console.error('API Error:', error);
+  function handleApiError(error, errorRef, options = { showSnackbar: true }) {
+    console.log('Error de API:', error);
     const backendErrors = {};
-    let userMessage = 'Ocurrió un error inesperado';
 
     if (error.response) {
-      const responseData = error.response.data;
-      
-      // Caso 1: Error estructurado con detail
-      if (responseData.detail) {
-        const detail = responseData.detail;
+      if (error.response?.data?.detail) {
+        const errorDetail = error.response.data.detail;
 
-        // 1a: Error de duplicado (formato específico)
-        if (detail.code === 'DUPLICATE_KEY') {
-          backendErrors[detail.field] = detail.message;
-          userMessage = `${detail.message} (Valor: ${detail.value})`;
-        }
-        // 1b: Lista de errores de validación (Pydantic)
-        else if (Array.isArray(detail)) {
-          detail.forEach(err => {
-            if (err.loc?.length > 1) {
-              const field = err.loc[1];
-              backendErrors[field] = err.msg;
+        if (Array.isArray(errorDetail)) {
+          // Múltiples errores de validación (estilo FastAPI)
+          errorDetail.forEach(err => {
+            if (err.loc && err.loc.length > 1) {
+              backendErrors[err.loc[1]] = err.msg;
             }
           });
-          userMessage = 'Revise los campos marcados';
+        } else if (typeof errorDetail === 'object' && errorDetail.field) {
+          // Error de campo específico
+          backendErrors[errorDetail.field] = errorDetail.message;
+        } else if (typeof errorDetail === 'string') {
+          // Error general
+          backendErrors.general = errorDetail;
         }
-        // 1c: Error de campo específico
-        else if (typeof detail === 'object' && detail.field) {
-          backendErrors[detail.field] = detail.message;
-          userMessage = detail.message;
-        }
-        // 1d: Mensaje directo
-        else {
-          userMessage = typeof detail === 'string' ? detail : detail.message;
-          backendErrors.general = userMessage;
-        }
-      }
-      // Caso 2: Error con mensaje directo
-      else if (responseData.message) {
-        userMessage = responseData.message;
-        backendErrors.general = userMessage;
-      }
-      // Caso 3: Error HTTP estándar
-      else {
-        userMessage = `Error del servidor (${error.response.status})`;
-        backendErrors.general = userMessage;
-      }
-    } 
-    // Error de red
-    else if (error.request) {
-      userMessage = 'Error de conexión con el servidor';
-      backendErrors.general = userMessage;
-    } 
-    // Error de configuración
-    else {
-      userMessage = `Error: ${error.message}`;
-      backendErrors.general = userMessage;
-    }
 
-    // Asignar errores a la referencia reactiva si existe
-    if (errorsRef) {
-      errorsRef.value = backendErrors;
-    }
+        // Asignar errores al reference si se proporcionó
+        if (errorRef) {
+          errorRef.value = backendErrors;
+        }
 
-    showSnackbar(userMessage, 'error');
-    return backendErrors;
-  };
+        if (options.showSnackbar) {
+          const errorMessages = Object.values(backendErrors).join(', ');
+          showSnackbar(errorMessages || 'Ocurrió un error inesperado.', 'error');
+        }
+      } else {
+        // Otros tipos de respuestas de error
+        const message = error.response.data?.message || `Error del servidor: ${error.response.status}`;
+        if (options.showSnackbar) {
+          showSnackbar(message, 'error');
+        }
+      }
+    } else if (error.request) {
+      console.log('Error de red:', error.request);
+      if (options.showSnackbar) {
+        showSnackbar('Error de conexión con el servidor', 'error');
+      }
+    } else {
+      console.log('Error:', error.message);
+      if (options.showSnackbar) {
+        showSnackbar('Error inesperado: ' + error.message, 'error');
+      }
+    }
+  }
 
   /**
-   * Maneja éxito de operaciones
-   * @param {string} message - Mensaje personalizado
-   * @param {string} [action] - Acción genérica (para mensaje por defecto)
+   * Muestra un mensaje de éxito en un snackbar
+   * @param {string} message - Mensaje a mostrar
    */
-  const handleSuccess = (message, action = 'operación') => {
-    const successMessage = message || `${action} realizada exitosamente`;
-    showSnackbar(successMessage, 'success');
-  };
+  function handleSuccess(message) {
+    showSnackbar(message, 'success');
+  }
 
   return {
     handleApiError,

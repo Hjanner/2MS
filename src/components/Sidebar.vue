@@ -45,6 +45,13 @@
 
       <v-list-item
         link
+        prepend-icon="mdi-credit-card-minus-outline"
+        title="Deudas"
+        to="/Debt"
+      />
+
+      <v-list-item
+        link
         prepend-icon="mdi-truck-delivery-outline"
         title="Proveedores"
         to="/Supplier"
