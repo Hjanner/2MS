@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
+import { TIPO_OPTIONS } from '@/api/data'
 import BaseFormDialog from '@/components/forms/BaseFormDialog.vue';
 import { validateRequired } from '@/utils/validators.js';
 
@@ -34,24 +35,6 @@ const category = ref({
 
 const localErrors = ref({});
 const isEditing = computed(() => props.mode === 'edit');
-
-// Opciones para el tipo de categoría
-const tipoOptions = [
-  { 
-    value: 'preparado', 
-    title: 'Preparado',
-    subtitle: 'Productos que requieren preparación',
-    icon: 'mdi-chef-hat',
-    color: 'success'
-  },
-  { 
-    value: 'noPreparado', 
-    title: 'No Preparado',
-    subtitle: 'Productos listos para consumo',
-    icon: 'mdi-package-variant',
-    color: 'warning'
-  }
-];
 
 // Reglas de validación usando los validadores importados
 const descrRules = [
@@ -112,7 +95,7 @@ function close() {
 
 // Obtener información del tipo seleccionado
 const selectedTypeInfo = computed(() => {
-  return tipoOptions.find(option => option.value === category.value.tipo) || null;
+  return TIPO_OPTIONS.find(option => option.value === category.value.tipo) || null;
 });
 </script>
 
@@ -173,7 +156,7 @@ const selectedTypeInfo = computed(() => {
           v-model="category.tipo"
           label="Tipo de Categoría *"
           variant="outlined"
-          :items="tipoOptions"
+          :items="TIPO_OPTIONS"
           item-title="title"
           item-value="value"
           :rules="tipoRules"

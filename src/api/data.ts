@@ -120,3 +120,21 @@ export const REFERENCIA_OPTIONS = [
     color: 'purple'
   }
 ];
+
+// Opciones para el tipo de categoría
+export const TIPO_OPTIONS = [
+  { 
+    value: 'preparado', 
+    title: 'Preparado',
+    subtitle: 'Productos que requieren preparación',
+    icon: 'mdi-chef-hat',
+    color: 'success'
+  },
+  { 
+    value: 'noPreparado', 
+    title: 'No Preparado',
+    subtitle: 'Productos listos para consumo',
+    icon: 'mdi-package-variant',
+    color: 'warning'
+  }
+];

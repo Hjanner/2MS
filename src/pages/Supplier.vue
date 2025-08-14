@@ -9,8 +9,6 @@ import api from '@/api/api.js';
 const proveedores = ref([]);
 const filteredProveedores = ref([]);
 const loading = ref(false);
-const deletingSupplier = ref(false);
-const showDeleteDialog = ref(false);
 const showSupplierForm = ref(false);
 const formLoading = ref(false);
 const formErrors = ref({});
@@ -52,21 +50,6 @@ async function handleSubmit(supplierData) {
   }
 }
 
-async function handlerDeleteSupplier(Rif) {
-  deletingSupplier.value = true;
-  try {
-    await api.delete(`/proveedores/${Rif}`);
-    await fetchProveedores();
-    showDeleteDialog.value = false;
-    currentSupplier.value = null;
-    handleSuccess('Proveedor eliminado correctamente');
-  } catch (error) {
-    handleApiError(error);
-  } finally {
-    deletingSupplier.value = false;
-  }
-}
-
 function handleAddSupplier() {
   currentSupplier.value = null;
   showSupplierForm.value = true;
@@ -77,10 +60,6 @@ function handleEditClick(supplier) {
   showSupplierForm.value = true;
 }
 
-function handleDeleteClick(supplier) {
-  currentSupplier.value = supplier;
-  showDeleteDialog.value = true;
-}
 
 function handleFilteredData(filtered) {
   filteredProveedores.value = filtered;
