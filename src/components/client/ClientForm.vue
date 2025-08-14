@@ -7,24 +7,11 @@ import ClientContactInfo from '@/components/forms/ClientContactInfo.vue';
 
 const props = defineProps({
   show: Boolean,
-  title: {
-    type: String,
-    default: 'Agregar Cliente'
-  },
+  title: String,
   loading: Boolean,
-  clientData: {
-    type: Object,
-    default: null
-  },
-  errors: { 
-    type: Object,
-    default: () => ({})
-  },
-  mode: {
-    type: String,
-    default: 'add',
-    validator: value => ['add', 'edit'].includes(value)
-  }
+  clientData: Object,
+  errors: Object,
+  mode: String
 });
 
 const emit = defineEmits(['submit', 'update:show', 'update:errors']);
@@ -39,27 +26,29 @@ const client = ref({
 const localErrors = ref({});
 const isEditing = computed(() => props.mode === 'edit');
 
-// Manejo de errores
+// Sincronización de errores
 watch(() => props.errors, (newErrors) => {
   localErrors.value = { ...newErrors };
-}, { immediate: true });
+}, { immediate: true, deep: true });
 
-// Actualizar formulario cuando cambian los datos
+// Sincronización de datos
 watch(() => props.clientData, (newVal) => {
-  if (newVal) {
-    client.value = { ...newVal };
-  } else {
-    resetForm();
-  }
+  client.value = newVal ? { ...newVal } : resetForm();
 }, { immediate: true });
 
 function handleSubmit() {
   localErrors.value = {};
   emit('update:errors', {});
   
-  // Validación básica antes de enviar
-  if (!client.value.nombre || !client.value.ci_cliente) {
-    localErrors.value.general = 'Complete los campos requeridos';
+  // Validación básica del frontend
+  if (!client.value.nombre) {
+    localErrors.value.nombre = 'El nombre es requerido';
+  }
+  if (!client.value.ci_cliente) {
+    localErrors.value.ci_cliente = 'La cédula es requerida';
+  }
+
+  if (Object.keys(localErrors.value).length > 0) {
     return;
   }
 
@@ -67,7 +56,7 @@ function handleSubmit() {
 }
 
 function resetForm() {
-  client.value = {
+  return {
     ci_cliente: '',
     nombre: '',
     tlf: '',
@@ -77,7 +66,7 @@ function resetForm() {
 
 function close() {
   emit('update:show', false);
-  localErrors.value = {};
+  emit('update:errors', {});
 }
 </script>
 

@@ -8,6 +8,9 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AdjuntementForm: typeof import('./src/components/inventory/AdjuntementForm.vue')['default']
+    AdjustementForm: typeof import('./src/components/inventory/AdjustementForm.vue')['default']
+    AdjustmentForm: typeof import('./src/components/inventory/AdjustmentForm.vue')['default']
     Appbar: typeof import('./src/components/Appbar.vue')['default']
     BacktoHome: typeof import('./src/components/common/BacktoHome.vue')['default']
     BaseFormDialog: typeof import('./src/components/forms/BaseFormDialog.vue')['default']

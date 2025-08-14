@@ -16,7 +16,7 @@ const props = defineProps({
     default: false
   }
 });
-const emit = defineEmits(['refresh', 'edit']);
+const emit = defineEmits(['refresh', 'edit', 'adjust']); 
 
 // Estado para controlar el modal de detalles
 const detailModal = ref({
@@ -189,6 +189,7 @@ function showDetails(producto) {
                 icon="mdi-package-variant-plus"
                 size="small"
                 color="warning"
+                @click="$emit('adjust', item)"
               />
             </template>
           </v-tooltip>

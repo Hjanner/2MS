@@ -125,11 +125,43 @@ BEGIN
 END;
 """
 
+#Se activa después de cualquier INSERT en la tabla Movimientos, excepto para compras, Actualiza el stock en Productos_noPreparados
+MOVIMIENTO_GENERAL_TRIGGER = """
+CREATE TRIGGER IF NOT EXISTS tr_after_movimiento_general_insert
+AFTER INSERT ON Movimientos
+WHEN NEW.referencia NOT IN ('compra') -- Excluir compras porque ya tienen su propio trigger
+BEGIN
+    -- Validar que el producto sea no preparado antes de actualizar stock
+    UPDATE Productos_noPreparados
+    SET cant_actual = CASE 
+        WHEN NEW.tipo_movimiento = 'entrada' THEN cant_actual + NEW.cant_movida
+        WHEN NEW.tipo_movimiento = 'salida' THEN cant_actual - NEW.cant_movida
+        ELSE cant_actual
+    END
+    WHERE cod_producto_noPreparado = NEW.cod_producto
+    AND EXISTS (
+        SELECT 1 FROM Productos_noPreparados 
+        WHERE cod_producto_noPreparado = NEW.cod_producto
+    );
+    
+    -- Validar que no quede stock negativo para salidas
+    SELECT CASE
+        WHEN NEW.tipo_movimiento = 'salida' 
+        AND EXISTS (
+            SELECT 1 FROM Productos_noPreparados 
+            WHERE cod_producto_noPreparado = NEW.cod_producto 
+            AND cant_actual < 0
+        )
+        THEN RAISE(ABORT, 'Stock insuficiente para el producto: ')
+    END;
+END;
+"""
+
 ALL_TRIGGERS = [
     MOVIMIENTO_COMPRA_TRIGGER_BEFORE,
     INGRESAR_NOPREPARADO_TRIGGER,
     VENTA_COMPLETA_TRIGGER,
-    # añadir más triggers aquí
+    MOVIMIENTO_GENERAL_TRIGGER
 ]
 
 print("Creando Triggers en:", db_path)

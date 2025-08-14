@@ -89,13 +89,14 @@ watch(() => props.errors, (newErrors) => {
 }, { immediate: true });
 
 // Actualizar el formulario cuando cambia productData
-watch(() => props.productData, (newVal) => {
+watch(() => props.productData, (newVal) => {  
   if (newVal) {
     // Datos básicos del producto
     product.value = {
       cod_producto: newVal.cod_producto || '',
       nombre: newVal.nombre || '',
       precio_usd: newVal.precio_usd || '',
+      cant_actual: newVal.cant_actual || 0,
       img: newVal.img || null,
       id_categoria: newVal.id_categoria || null,
       tipo_producto: newVal.tipo_producto || 'noPreparado'
@@ -423,6 +424,7 @@ const validationRules = {
                   min="0"
                   :rules="validationRules.cant_actual"
                   :error-messages="localErrors.cant_actual"
+                  :readonly="isEditing"
                   hint="Stock actual disponible"
                   persistent-hint
                   prepend-inner-icon="mdi-package"

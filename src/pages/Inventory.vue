@@ -2,8 +2,8 @@
 import { ref, onMounted } from 'vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import InventoryList from '@/components/inventory/InventoryList.vue';
+import AdjustmentForm from '@/components/inventory/AdjustmentForm.vue';
 import SearchFilter from '@/components/common/SearchFilter.vue'; 
-import BacktoHome from '@/components/common/BacktoHome.vue';
 import ProductForm from '@/components/product/ProductForm.vue';
 import api from '@/api/api';
 
@@ -19,6 +19,11 @@ const editingProduct = ref(false);
 const showEditDialog = ref(false);
 const editProductErrors = ref({});
 const currentProduct = ref(null);
+const showAdjustDialog = ref(false);
+const adjustingInventory = ref(false);
+const adjustInventoryErrors = ref({});
+const currentAdjustProduct = ref(null);
+
 
 
 async function fetchCategorias() {
@@ -224,6 +229,36 @@ function closeEditDialog() {
   currentProduct.value = null;
 }
 
+
+async function handleInventoryAdjustment(movimientoData) {
+  adjustingInventory.value = true;
+  adjustInventoryErrors.value = {};  
+  try {
+    await api.post('/movimientos', movimientoData);
+    await fetchProducts(); // Refrescar la lista de productos
+    showAdjustDialog.value = false;
+    currentAdjustProduct.value = null;
+    showSnackbar('Ajuste de inventario realizado correctamente', 'success');
+  } catch (error) {
+    handleApiError(error, adjustInventoryErrors);
+  } finally {
+    adjustingInventory.value = false;
+  }
+}
+
+// función para manejar el click del botón de ajustar
+function handleAdjustClick(producto) {
+  currentAdjustProduct.value = producto;
+  showAdjustDialog.value = true;
+}
+
+// función para cerrar el diálogo de ajuste
+function closeAdjustDialog() {
+  showAdjustDialog.value = false;
+  adjustInventoryErrors.value = {};
+  currentAdjustProduct.value = null;
+}
+
 onMounted(async () => {
   await fetchCategorias();
   await fetchProducts();
@@ -266,7 +301,8 @@ onMounted(async () => {
                 :loading="loading"
                 :categorias="categorias"  
                 @refresh="handleRefresh"
-                @edit="handleEditClick"  
+                @edit="handleEditClick"
+                @adjust="handleAdjustClick"  
               />
             </v-card-text>
           </v-card>
@@ -299,6 +335,16 @@ onMounted(async () => {
       @submit="handlerEditProduct"
       @update:show="closeEditDialog"
     />      
+
+    <!-- Inventory Adjustment Dialog -->
+    <AdjustmentForm
+      v-model:show="showAdjustDialog"
+      :loading="adjustingInventory"
+      :product-data="currentAdjustProduct"
+      :errors="adjustInventoryErrors"
+      @submit="handleInventoryAdjustment"
+      @update:show="closeAdjustDialog"
+    />
 </template>
 
 <style scoped>

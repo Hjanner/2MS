@@ -20,13 +20,17 @@ const currentClient = ref(null);
 
 const { handleApiError, handleSuccess } = useApiErrorHandler();
 const { showSnackbar } = useSnackbar();
+
 async function fetchClientes() {
   loading.value = true;
   try {
     const response = await api.get('/clientes');
     clientes.value = response.data;
   } catch (error) {
-    handleApiError(error);
+    const errors = handleApiError(error, formErrors);
+    if (errors.ci_cliente) {
+      // Resaltar campo de cédula en tu UI
+    }
   } finally { 
     loading.value = false;
   }
@@ -34,7 +38,7 @@ async function fetchClientes() {
 
 async function handleSubmit(clientData) {
   formLoading.value = true;
-  formErrors.value = {};
+  formErrors.value = {}; // Limpiar errores antes de enviar
   
   try {
     if (currentClient.value) {
@@ -48,11 +52,18 @@ async function handleSubmit(clientData) {
     showClientForm.value = false;
     await fetchClientes();
   } catch (error) {
-    handleApiError(error, formErrors);
+    formErrors.value = handleApiError(error);
   } finally {
     formLoading.value = false;
   }
 }
+
+function handleAddClient() {
+  currentClient.value = null;
+  formErrors.value = {}; // Limpiar errores al abrir formulario
+  showClientForm.value = true;
+}
+
 
 async function handlerDeleteClient(ci_cliente) {
   deletingClient.value = true;
@@ -67,11 +78,6 @@ async function handlerDeleteClient(ci_cliente) {
   } finally {
     deletingClient.value = false;
   }
-}
-
-function handleAddClient() {
-  currentClient.value = null;
-  showClientForm.value = true;
 }
 
 function handleEditClick(client) {

@@ -77,3 +77,46 @@ export const UNIDADES_MEDIDAS = [
   'metros',
   'centímetros'
 ];
+
+export const TIPO_MOVIMIENTO_OPTIONS = [
+  {
+    title: 'Entrada (Aumentar stock)',
+    value: 'entrada',
+    icon: 'mdi-arrow-up-bold',
+    color: 'success'
+  },
+  {
+    title: 'Salida (Reducir stock)',
+    value: 'salida',
+    icon: 'mdi-arrow-down-bold',
+    color: 'error'
+  }
+];
+
+// Opciones para la referencia de movimientos de salida
+export const REFERENCIA_OPTIONS = [
+  {
+    title: 'Descarte',
+    value: 'descarte',
+    icon: 'mdi-delete',
+    color: 'error'
+  },
+  {
+    title: 'Ajuste',
+    value: 'ajuste',
+    icon: 'mdi-tune',
+    color: 'warning'
+  },
+  {
+    title: 'Traslado a tienda',
+    value: 'traslado_tienda',
+    icon: 'mdi-store',
+    color: 'info'
+  },
+  {
+    title: 'Autoconsumo',
+    value: 'autoconsumo',
+    icon: 'mdi-food-fork-drink',
+    color: 'purple'
+  }
+];
