@@ -1,6 +1,7 @@
 <script setup>
 import { inject, toRefs, ref, onMounted, computed } from 'vue'
 import SaleForm from '@/components/sale/SaleForm.vue'
+import SaleBillModal from '@/components/sale/SaleBillModal.vue'
 import { useSnackbar } from '@/composables/useSnackbar'
 import api from '@/api/api'
 
@@ -15,12 +16,15 @@ const { selectedItems } = toRefs(props)
 const cartActions = inject('cartActions')
 const { showSnackbar } = useSnackbar()
 
-// Estados para el diálogo de venta
+// Estados para el diálogo de venta y factura
 const showSaleDialog = ref(false)
 const submittingSale = ref(false)
 const saleErrors = ref({})
 const tasas = ref(0)
 const clientes = ref([])
+const showFactura = ref(false)
+const facturaVenta = ref(null)
+const facturaDetalles = ref([])
 
 // Computed para el total en bolívares
 const totalBolivares = computed(() => {
@@ -75,45 +79,39 @@ async function handlerPay() {
 }
 
 // Función para manejar el envío de la venta
+
+let ventaPendiente = null
 async function handleSubmitSale(ventaCompleta) {
   submittingSale.value = true
   saleErrors.value = {}
-  
   try {
-    console.log('Datos completos a enviar:', ventaCompleta)
-    
     let response
-    
     if (ventaCompleta.tipo_transaccion === 'credito') {
-      // Para ventas a crédito, usar endpoint específico
       response = await api.post('/ventas/registrar_credito', {
         venta: ventaCompleta.venta,
         detalles: ventaCompleta.detalles,
         credito: ventaCompleta.credito,
-        pago_inicial: ventaCompleta.pago // Solo si hay pago inicial
-      })      
-
+        pago_inicial: ventaCompleta.pago
+      })
       showSnackbar('Venta a crédito registrada correctamente', 'success')
     } else {
-      // Para ventas de contado, usar el endpoint existente
       response = await api.post('/ventas/registrar', {
         venta: ventaCompleta.venta,
         detalles: ventaCompleta.detalles,
         pago: ventaCompleta.pago
       })
-      
-      showSnackbar('Venta registrada correctamente', 'success')
     }
-    
-    console.log('Venta registrada con ID:', response.data.id_venta)
-    
-    // Cerrar diálogo y limpiar carrito
+    // Mostrar factura, pero no limpiar ni fetch hasta confirmar
+    facturaVenta.value = { ...ventaCompleta.venta, ...response.data }
+    facturaDetalles.value = ventaCompleta.detalles.map(det => {
+      const prod = selectedItems.value.find(p => p.cod_producto === det.cod_producto)
+      return { ...det, nombre: prod ? prod.nombre : det.cod_producto }
+    })
+    ventaPendiente = { venta: facturaVenta.value, detalles: facturaDetalles.value }
+    showFactura.value = true
     showSaleDialog.value = false
-    cartActions.clearCart()
   } catch (error) {
     console.error('Error al registrar la venta:', error)
-    
-    // Manejar errores específicos de la transacción
     if (error.response?.data?.detail) {
       if (typeof error.response.data.detail === 'string') {
         showSnackbar(error.response.data.detail, 'error')
@@ -124,11 +122,18 @@ async function handleSubmitSale(ventaCompleta) {
     } else {
       showSnackbar('Error al registrar la venta', 'error')
     }
-    
     handleApiError(error, saleErrors)
   } finally {
     submittingSale.value = false
   }
+}
+
+function onConfirmFactura() {
+  fetchTasas()
+  fetchClientes()
+  cartActions.clearCart()
+  showSnackbar('Venta registrada correctamente', 'success')
+  ventaPendiente = null
 }
 
 // Función auxiliar para manejar errores de API
@@ -391,6 +396,13 @@ onMounted(() => {
     :clientes="clientes"
     @submit="handleSubmitSale"
     @update:show="closeSaleDialog"
+  />
+  <SaleBillModal
+    v-model:show="showFactura"
+    :venta="facturaVenta"
+    :detalles="facturaDetalles"
+    :clientes="clientes"
+    @confirm="onConfirmFactura"
   />
 </template>
 

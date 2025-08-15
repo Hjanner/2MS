@@ -24,23 +24,23 @@
 
       <v-list-item
         link
-        prepend-icon="mdi-account-group"
-        title="Clientes"
-        to="/Clients"
-      />
-
-      <v-list-item
-        link
-        prepend-icon="mdi-cart-variant"
-        title="Compras"
-        to="/Purchases"
-      />
-
-      <v-list-item
-        link
         prepend-icon="mdi-cash-register"
         title="Ventas"
         to="/Sales"
+      />
+
+      <v-list-item
+        link
+        prepend-icon="mdi-cash-check"
+        title="Pagos"
+        to="/Payments"
+      />
+
+      <v-list-item
+        link
+        prepend-icon="mdi-account-group"
+        title="Clientes"
+        to="/Clients"
       />
 
       <v-list-item
@@ -49,6 +49,13 @@
         title="Deudas"
         to="/Debt"
       />
+
+      <v-list-item
+        link
+        prepend-icon="mdi-cart-variant"
+        title="Compras"
+        to="/Purchases"
+      />   
 
       <v-list-item
         link

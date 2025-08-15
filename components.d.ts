@@ -34,6 +34,9 @@ declare module 'vue' {
     LowStockAlert: typeof import('./src/components/inventory/LowStockAlert.vue')['default']
     OrderSummary: typeof import('./src/components/OrderSummary.vue')['default']
     PaymentModal: typeof import('./src/components/debt/PaymentModal.vue')['default']
+    PaymentsDetail: typeof import('./src/components/payments/PaymentsDetail.vue')['default']
+    PaymentsDetails: typeof import('./src/components/payments/PaymentsDetail.vue')['default']
+    PaymentsList: typeof import('./src/components/payments/PaymentsList.vue')['default']
     ProductBasicInfo: typeof import('./src/components/forms/ProductBasicInfo.vue')['default']
     ProductDetailModal: typeof import('./src/components/product/ProductDetailModal.vue')['default']
     ProductDetailRow: typeof import('./src/components/product/ProductDetailRow.vue')['default']
@@ -48,6 +51,7 @@ declare module 'vue' {
     ReloadButton: typeof import('./src/components/common/ReloadButton.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SaleBillModal: typeof import('./src/components/sale/SaleBillModal.vue')['default']
     SaleDetailModal: typeof import('./src/components/sale/SaleDetailModal.vue')['default']
     SaleForm: typeof import('./src/components/sale/SaleForm.vue')['default']
     SaleList: typeof import('./src/components/sale/SaleList.vue')['default']
@@ -56,5 +60,6 @@ declare module 'vue' {
     SkeletonGrid: typeof import('./src/components/SkeletonGrid.vue')['default']
     SupplierForm: typeof import('./src/components/supplier/SupplierForm.vue')['default']
     SupplierList: typeof import('./src/components/supplier/SupplierList.vue')['default']
+    VentaFacturaModal: typeof import('./src/components/sale/VentaFacturaModal.vue')['default']
   }
 }

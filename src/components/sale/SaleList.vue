@@ -5,9 +5,9 @@
       <v-col cols="12" md="3">
         <v-card class="text-center pa-4" color="primary" variant="tonal">
           <v-card-text>
-            <v-icon size="40" class="mb-2">mdi-cart</v-icon>
-            <div class="text-h6">Total Ventas</div>
-            <div class="text-h4">{{ ventas.length }}</div>
+            <v-icon size="large" class="mb-2">mdi-cart</v-icon>
+            <div class="text-h6 font-weight-bold">{{ ventas.length }}</div>
+            <div class="text-subtitle-2">Total Ventas</div>
           </v-card-text>
         </v-card>
       </v-col>
@@ -15,9 +15,9 @@
       <v-col cols="12" md="3">
         <v-card class="text-center pa-4" color="success" variant="tonal">
           <v-card-text>
-            <v-icon size="40" class="mb-2">mdi-currency-usd</v-icon>
-            <div class="text-h6">Total USD</div>
-            <div class="text-h4">{{ formatCurrency(totalVentasUSD) }}</div>
+            <v-icon size="large" class="mb-2">mdi-currency-usd</v-icon>
+            <div class="text-h6 font-weight-bold">{{ formatCurrency(totalVentasUSD) }}</div>
+            <div class="text-subtitle-2">Total USD</div>
           </v-card-text>
         </v-card>
       </v-col>
@@ -25,9 +25,9 @@
       <v-col cols="12" md="3">
         <v-card class="text-center pa-4" color="warning" variant="tonal">
           <v-card-text>
-            <v-icon size="40" class="mb-2">mdi-cash</v-icon>
-            <div class="text-h6">Total BS</div>
-            <div class="text-h4">{{ formatCurrencyBS(totalVentasBS) }}</div>
+            <v-icon size="large" class="mb-2">mdi-cash</v-icon>
+            <div class="text-h6 font-weight-bold">{{ formatCurrencyBS(totalVentasBS) }}</div>
+            <div class="text-subtitle-2">Total Bolívares</div>
           </v-card-text>
         </v-card>
       </v-col>
@@ -35,9 +35,10 @@
       <v-col cols="12" md="3">
         <v-card class="text-center pa-4" color="info" variant="tonal">
           <v-card-text>
-            <v-icon size="40" class="mb-2">mdi-package-variant</v-icon>
-            <div class="text-h6">Productos Vendidos</div>
-            <div class="text-h4">{{ totalProductosVendidos }}</div>
+            <v-icon size="large" class="mb-2">mdi-package-variant</v-icon>
+            <div class="text-h6 font-weight-bold">{{ totalProductosVendidos }}</div>
+            <div class="text-subtitle-2">Productos Vendidos</div>
+
           </v-card-text>
         </v-card>
       </v-col>

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { TIPOS_VENTA, METODOS_PAGO } from '@/api/data'
-import { getCurrentDate, getCurrentTimeStamp } from '@/utils/formatters'
+import { getCurrentDate } from '@/utils/formatters'
 
 const props = defineProps({
   show: {
@@ -237,7 +237,7 @@ async function submitForm() {
 
     console.log('Enviando venta:', ventaCompleta)
     emit('submit', ventaCompleta)
-    
+    resetForm()
   } catch (error) {
     console.error('Error al preparar datos de venta:', error)
   }

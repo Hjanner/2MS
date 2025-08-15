@@ -143,10 +143,24 @@ class BaseController(Generic[T]):
     def get_list_from_date(
         self, 
         fecha_inicio: Optional[str] = None,
-        fecha_fin: Optional[str] = None
+        fecha_fin: Optional[str] = None,
+        field_key: str = 'fecha',  # Ahora acepta field_key
+        order_field: Optional[str] = None,
+        order_direction: str = 'DESC'
     ) -> List[Any]:
-        result = self.service.get_data_from_date(
-            fecha_inicio=fecha_inicio,
-            fecha_fin=fecha_fin
-        )
-        return result if result is not None else []
+        try:
+            result = self.service.get_data_from_date(
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin,
+                field_key=field_key,
+                order_field=order_field,
+                order_direction=order_direction
+            )
+            return result
+        except ValueError as ve:
+            raise HTTPException(status_code=400, detail=str(ve))
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error al obtener lista: {str(e)}"
+            )

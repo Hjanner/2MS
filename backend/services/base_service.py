@@ -301,39 +301,63 @@ class BaseService:
         self, 
         fecha_inicio: Optional[str] = None,
         fecha_fin: Optional[str] = None,
-        ) -> List[Any]:
+        field_key: str = 'fecha',  # Quitamos Optional, ahora es requerido con valor por defecto
+        order_field: Optional[str] = None,  # Nuevo parámetro para campo de ordenación
+        order_direction: str = 'DESC'  # Dirección de ordenación
+    ) -> List[Any]:
         """
-        Obtiene los datos filtrados por rango de fechas.
-        :return: Lista de instancias del modelo o lista vacía si no hay datos.
+        Obtiene datos filtrados por rango de fechas de forma genérica.
+        
+        Args:
+            fecha_inicio: Fecha en formato DD/MM/YYYY
+            fecha_fin: Fecha en formato DD/MM/YYYY
+            field_key: Nombre del campo fecha a filtrar
+            order_field: Campo por el que ordenar (si es None, usa field_key)
+            order_direction: Dirección de ordenación (ASC/DESC)
+            
+        Returns:
+            Lista de instancias del modelo o lista vacía
         """
+        # Validación básica de parámetros
+        if not field_key:
+            raise ValueError("El parámetro field_key es requerido")
+        
+        if order_direction.upper() not in ('ASC', 'DESC'):
+            raise ValueError("order_direction debe ser 'ASC' o 'DESC'")
+        
         query = f"SELECT * FROM {self.table_name}"
         params = []
-        
         conditions = []
         
+        # Procesamiento de fechas
         if fecha_inicio:
-            conditions.append("fecha >= ?")
-            params.append(datetime.strptime(fecha_inicio, "%d/%m/%Y").isoformat())
+            try:
+                conditions.append(f"{field_key} >= ?")
+                params.append(datetime.strptime(fecha_inicio, "%d/%m/%Y").isoformat())
+            except ValueError as e:
+                raise ValueError(f"Formato de fecha_inicio inválido: {str(e)}")
         
         if fecha_fin:
-            conditions.append("fecha <= ?")
-            params.append(datetime.strptime(fecha_fin, "%d/%m/%Y").isoformat())
+            try:
+                conditions.append(f"{field_key} <= ?")
+                params.append(datetime.strptime(fecha_fin, "%d/%m/%Y").isoformat())
+            except ValueError as e:
+                raise ValueError(f"Formato de fecha_fin inválido: {str(e)}")
         
+        # Construcción de la consulta
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
         
-        query += " ORDER BY fecha DESC"
+        # Ordenación
+        order_by = order_field if order_field else field_key
+        query += f" ORDER BY {order_by} {order_direction}"
         
+        # Ejecución
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             cursor.execute(query, params)
             rows = cursor.fetchall()
             
-            if rows:
-                # Crear una lista de objetos del modelo
-                return [self.model.from_dict(dict(row)) for row in rows]
-            return []  # Retornar lista vacía en lugar de None
-
-            
-            
+            return [self.model.from_dict(dict(row)) for row in rows] if rows else []            
+                

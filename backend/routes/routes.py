@@ -1,6 +1,6 @@
 # Aquí se crean los controladores y routers para cada entidad usando la fábrica genérica
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Query
 from fastapi.params import Depends
 from backend.models.models import *
 from backend.controllers.controller import *
@@ -180,21 +180,27 @@ def get_last_record():
     return ultima_tasa
 
 @tasasCambio_router.get("/listar/", response_model=List[TasaCambio])
-def get_list(
+def list_tasas_cambio(
     fecha_inicio: Optional[str] = None,
     fecha_fin: Optional[str] = None,
+    field_key: str = Query('fecha', description="Campo por el que filtrar fechas"),
+    order_field: Optional[str] = Query(None, description="Campo por el que ordenar"),
+    order_direction: str = Query('DESC', description="Dirección de ordenación (ASC/DESC)")
 ):
     try:
         return tasasCambio_controller.get_list_from_date(
             fecha_inicio=fecha_inicio,
             fecha_fin=fecha_fin,
+            field_key=field_key,
+            order_field=order_field,
+            order_direction=order_direction
         )
     except HTTPException as he:
         raise he
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Error al obtener lista de tasas del mes cursante: {str(e)}"
+            detail=f"Error al obtener lista de pagos: {str(e)}"
         )
 
 
@@ -237,7 +243,32 @@ def list_ventas(
             detail=f"Error al obtener lista de venta: {str(e)}"
         )
         
-    
+@pagos_router.get("/listar/", response_model=List[Pago])
+def list_pagos(
+    fecha_inicio: Optional[str] = None,
+    fecha_fin: Optional[str] = None,
+    field_key: str = Query('fecha_pago', description="Campo por el que filtrar fechas"),
+    order_field: Optional[str] = Query(None, description="Campo por el que ordenar"),
+    order_direction: str = Query('DESC', description="Dirección de ordenación (ASC/DESC)")
+):
+    try:
+        return pagos_controller.get_list_from_date(
+            fecha_inicio=fecha_inicio,
+            fecha_fin=fecha_fin,
+            field_key=field_key,
+            order_field=order_field,
+            order_direction=order_direction
+        )
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al obtener lista de pagos: {str(e)}"
+        )    
+        
+
+
 # @ventas_router.get("/producto/{cod_producto}", response_model=List[DetalleProductoVenta])
 # async def buscar_ventas_por_producto(
 #     cod_producto: str,
