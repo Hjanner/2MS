@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import DebtList from '@/components/debt/DebtList.vue';
 import SearchFilter from '@/components/common/SearchFilter.vue'; 
-// import PaymentModal from '@/components/debt/PaymentModal.vue';
+import PaymentModal from '@/components/debt/PaymentModal.vue';
 import api from '@/api/api';
 
 const creditos = ref([]);
@@ -57,6 +57,10 @@ function handleMakePayment(creditData) {
 async function handleSubmitPayment(paymentData) {
   paymentLoading.value = true;
   paymentErrors.value = {};
+
+    console.log('paymentData', paymentData);
+    console.log('paymentData', paymentModal);
+
   
   try {
     // Calcular nuevo monto pagado
@@ -73,13 +77,31 @@ async function handleSubmitPayment(paymentData) {
     
     // Actualizar el crédito
     const updateData = {
+      ci_cliente: paymentModal.value.creditData.ci_cliente,
       monto_pagado: nuevoMontoPagado,
+      monto_total: paymentModal.value.creditData.monto_total,
+      fecha_credito: paymentModal.value.creditData.fecha_credito,
       fecha_ultimo_abono: paymentData.fecha_pago,
-      estado: nuevoEstado
+      estado: nuevoEstado,
+      id_venta: paymentModal.value.creditData.id_venta
     };
-    
+
     await api.put(`/creditos/${paymentModal.value.creditId}`, updateData);
     
+    // registrar pago
+    const pagoData = {
+      id_venta: paymentModal.value.creditData.id_venta,
+      monto: paymentData.monto_abono,
+      fecha_pago: paymentData.fecha_pago,
+      metodo_pago: paymentData.metodo_pago,
+      referencia: paymentData.referencia,
+      num_tlf: paymentData.num_tlf
+    };
+    
+    console.log('loq ue se envia al endpoitn credito', pagoData);
+    
+    await api.post('/pagos/', pagoData)
+
     showSnackbar('Pago registrado correctamente', 'success');
     paymentModal.value.show = false;
     await fetchDebts(); // Recargar la lista

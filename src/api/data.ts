@@ -1,9 +1,9 @@
 export const DEPARTAMENTOS: string[] = [
-    'C.I.A.',
-    'PCAD',
-    'HCHSL',
-    'CIEP',
-    'VCentro de Estudios Regionales',
+    'CIAP',
+    'CADH',
+    'CHSL',
+    'CIEPV',
+    'Centro de Estudios Regionales',
     'Consultoría Jurídica',
     'Coordinación Administración de Personal',
     'Coordinación General de Recursos Humanos',
@@ -138,3 +138,16 @@ export const TIPO_OPTIONS = [
     color: 'warning'
   }
 ];
+
+export const TIPOS_VENTA = [
+  { title: 'De Contado', value: 'de_contado' },
+  { title: 'Crédito', value: 'credito' }
+]
+
+export const METODOS_PAGO = [
+  { title: 'Efectivo Bs', value: 'efectivo_bs' },
+  { title: 'Efectivo USD', value: 'efectivo_usd' },
+  { title: 'Pago Móvil', value: 'pago_movil' },
+  { title: 'Débito', value: 'debito' },
+  { title: 'Transferencia', value: 'transferencia' }
+]

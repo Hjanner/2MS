@@ -105,7 +105,7 @@ class PagoValidators:
     @classmethod
     def validate_metodo(cls, v):
         metodos_validos = [
-            'efectivo_bs', 'efectvo_usd',
+            'efectivo_bs', 'efectivo_usd',
             'pago_movil', 'debito', 'transferencia'
         ]
         return validate_enum(v, metodos_validos, "Método de pago")

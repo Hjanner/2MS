@@ -207,6 +207,7 @@ class Credito(BaseModel):
     Gestiona los créditos otorgados a clientes.
     """
     id_credito: Optional[int] = Field(None, description="ID único del crédito (AUTOINCREMENT)")
+    id_venta: Optional[int] = Field(default=None, description="ID de la venta asociada al crédito (clave foránea)")
     ci_cliente: str = Field(..., description="CI del cliente con el crédito (clave foránea)")
     fecha_credito: date = Field(..., description="Fecha en que se otorgó el crédito")
     fecha_ultimo_abono: Optional[date] = Field(None, description="Fecha del último abono al crédito (opcional)")
@@ -233,7 +234,7 @@ class Pago(BaseModel, PagoValidators):
     id_venta: Optional[int] = Field(default=None, description="ID de la venta asociada al pago (clave foránea)")
     monto: float = Field(..., description="Monto del pago")
     fecha_pago: date = Field(..., description="Fecha en que se realizó el pago")
-    metodo_pago: str = Field(..., description="Método de pago ('efectivo_bs', 'efectvo_usd', 'pago_movil', 'debito', 'transferencia')")
+    metodo_pago: str = Field(..., description="Método de pago ('efectivo_bs', 'efectivo_usd', 'pago_movil', 'debito', 'transferencia')")
     referencia: Optional[str] = Field(None, description="Referencia del pago (ej. número de transferencia)")
     num_tefl: Optional[str] = Field(None, description="Número de teléfono asociado al pago móvil (opcional)")
 
@@ -303,3 +304,100 @@ class VentaTransaccionPayload(BaseModel):
     venta: Venta
     detalles: List[DetalleVenta]
     pago: Pago
+    
+#modelos especiales pare credito
+class VentaCreditoTransaccionPayload(BaseModel):
+    """
+    Payload para ventas a crédito que incluye venta, detalles, crédito y pago inicial opcional
+    """
+    venta: Venta
+    detalles: List[DetalleVenta]
+    credito: Credito
+    pago_inicial: Optional[Pago] = None
+    
+    # @validator('venta')
+    # def validate_venta_credito(cls, v):
+    #     if v.tipo != 'credito':
+    #         raise ValueError('El tipo de venta debe ser "credito"')
+    #     if not v.ci_cliente:
+    #         raise ValueError('Las ventas a crédito requieren un cliente')
+    #     return v
+    
+    # @validator('credito')
+    # def validate_credito_data(cls, v, values):
+    #     if 'venta' in values:
+    #         venta = values['venta']
+    #         if v.ci_cliente != venta.ci_cliente:
+    #             raise ValueError('El cliente del crédito debe coincidir con el de la venta')
+    #         if abs(v.monto_total - venta.monto_total_usd) > 0.01:
+    #             raise ValueError('El monto total del crédito debe coincidir con el monto USD de la venta')
+    #     return v
+    
+    # @validator('pago_inicial')
+    # def validate_pago_inicial(cls, v, values):
+    #     if v and 'venta' in values and 'credito' in values:
+    #         venta = values['venta']
+    #         credito = values['credito']
+            
+    #         if v.monto > venta.monto_total_bs:
+    #             raise ValueError('El pago inicial no puede ser mayor al total de la venta en BS')
+                
+    #         # Convertir pago inicial a USD para comparar con crédito
+    #         if venta.monto_total_bs > 0:
+    #             pago_inicial_usd = v.monto / (venta.monto_total_bs / venta.monto_total_usd)
+    #             if abs(credito.monto_pagado - pago_inicial_usd) > 0.01:
+    #                 raise ValueError('El monto pagado del crédito debe coincidir con el pago inicial en USD')
+    #     return v
+
+class VentaUnificadaPayload(BaseModel):
+    """
+    Payload unificado que puede manejar tanto ventas de contado como a crédito
+    """
+    venta: Venta
+    detalles: List[DetalleVenta]
+    pago: Optional[Pago] = None
+    credito: Optional[Credito] = None
+    tipo_transaccion: str = Field(..., description="Tipo de transacción: 'de_contado' o 'credito'")
+    
+    # @validator('tipo_transaccion')
+    # def validate_tipo_transaccion(cls, v):
+    #     if v not in ['de_contado', 'credito']:
+    #         raise ValueError('tipo_transaccion debe ser "de_contado" o "credito"')
+    #     return v
+    
+    # @validator('pago')
+    # def validate_pago_por_tipo(cls, v, values):
+    #     if 'tipo_transaccion' in values:
+    #         tipo = values['tipo_transaccion']
+    #         if tipo == 'de_contado' and not v:
+    #             raise ValueError('Las ventas de contado requieren datos de pago')
+    #     return v
+    
+    # @validator('credito')
+    # def validate_credito_por_tipo(cls, v, values):
+    #     if 'tipo_transaccion' in values:
+    #         tipo = values['tipo_transaccion']
+    #         if tipo == 'credito' and not v:
+    #             raise ValueError('Las ventas a crédito requieren datos del crédito')
+    #     return v
+
+# Modelo para respuestas de ventas a crédito
+class VentaCreditoResponse(BaseModel):
+    """
+    Respuesta para ventas a crédito registradas exitosamente
+    """
+    success: bool
+    message: str
+    id_venta: int
+    id_credito: int
+    id_pago_inicial: Optional[int] = None
+    productos_actualizados: dict
+    
+class EstadisticasCredito(BaseModel):
+    """
+    Modelo para estadísticas de créditos
+    """
+    total_creditos_activos: int
+    monto_total_pendiente: float
+    creditos_vencidos: int
+    promedio_dias_pago: Optional[float] = None

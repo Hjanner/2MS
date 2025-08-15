@@ -90,6 +90,9 @@ CREATE TABLE IF NOT EXISTS Creditos (
   monto_total REAL,
   monto_pagado REAL,
   estado TEXT CHECK (estado IN ('Pagado', 'Pendiente', 'Parcial')),
+  id_venta INTEGER,
+  
+  FOREIGN KEY (id_venta) REFERENCES Ventas(id_venta),
   FOREIGN KEY (ci_cliente) REFERENCES Clientes(ci_cliente)
 );
 
@@ -99,7 +102,7 @@ CREATE TABLE IF NOT EXISTS Pagos (
   monto REAL,
   fecha_pago DATE,
   metodo_pago TEXT CHECK (metodo_pago IN (
-    'efectivo_bs', 'efectvo_usd', 'pago_movil', 'debito', 'transferencia')),
+    'efectivo_bs', 'efectivo_usd', 'pago_movil', 'debito', 'transferencia')),
   referencia TEXT,
   num_tefl TEXT,
   FOREIGN KEY (id_venta) REFERENCES Ventas(id_venta)

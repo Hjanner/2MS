@@ -1,5 +1,5 @@
 <script setup>
-import { inject, toRefs, ref, onMounted } from 'vue'
+import { inject, toRefs, ref, onMounted, computed } from 'vue'
 import SaleForm from '@/components/sale/SaleForm.vue'
 import { useSnackbar } from '@/composables/useSnackbar'
 import api from '@/api/api'
@@ -20,17 +20,39 @@ const showSaleDialog = ref(false)
 const submittingSale = ref(false)
 const saleErrors = ref({})
 const tasas = ref(0)
+const clientes = ref([])
+
+// Computed para el total en bolívares
+const totalBolivares = computed(() => {
+  return (cartActions.getCartTotal() * tasas.value).toFixed(2)
+})
+
+// Computed para verificar si el carrito tiene items
+const hasItems = computed(() => {
+  return selectedItems.value.length > 0
+})
+
+async function fetchClientes() {
+  try {
+    const response = await api.get('/clientes')
+    clientes.value = response.data
+    console.log('Clientes cargados:', clientes.value.length)
+  } catch (error) {
+    console.error('Error al cargar clientes:', error)
+    showSnackbar('Error al cargar la lista de clientes', 'error')
+  } 
+}
 
 // Función para obtener tasas de cambio
 async function fetchTasas() {
   try {
     const response = await api.get('/tasas_cambio/ultima_tasa/')
     tasas.value = response.data.valor_usd_bs
-    console.log('Tasa obtenida:', tasas.value);
+    console.log('Tasa obtenida:', tasas.value)
   } catch (error) {
     console.error('Error al cargar tasas:', error)
     showSnackbar('Error al cargar las tasas de cambio', 'error')
-    // Valor por defecto si falla ojito
+    // Valor por defecto si falla
     tasas.value = 36.50
   }
 }
@@ -42,10 +64,15 @@ async function handlerPay() {
     return
   }
   
-  // Cargar tasas antes de abrir el diálogo
-  await fetchTasas()
+  try {
+    // Cargar tasas y clientes antes de abrir el diálogo
+    await Promise.all([fetchTasas(), fetchClientes()])
     showSaleDialog.value = true
+  } catch (error) {
+    console.error('Error al cargar datos:', error)
+    showSnackbar('Error al cargar datos necesarios para la venta', 'error')
   }
+}
 
 // Función para manejar el envío de la venta
 async function handleSubmitSale(ventaCompleta) {
@@ -53,29 +80,49 @@ async function handleSubmitSale(ventaCompleta) {
   saleErrors.value = {}
   
   try {
-    console.log('Datos completos a enviar:', ventaCompleta);
+    console.log('Datos completos a enviar:', ventaCompleta)
     
-    // Usar el nuevo endpoint transaccional que maneja todo en una sola operación
-    const response = await api.post('/ventas/registrar', {
-      venta: ventaCompleta.venta,
-      detalles: ventaCompleta.detalles,
-      pago: ventaCompleta.pago
-    })
+    let response
     
-    console.log('Venta registrada con ID:', response.data.id_venta);
+    if (ventaCompleta.tipo_transaccion === 'credito') {
+      // Para ventas a crédito, usar endpoint específico
+      response = await api.post('/ventas/registrar_credito', {
+        venta: ventaCompleta.venta,
+        detalles: ventaCompleta.detalles,
+        credito: ventaCompleta.credito,
+        pago_inicial: ventaCompleta.pago // Solo si hay pago inicial
+      })      
+
+      showSnackbar('Venta a crédito registrada correctamente', 'success')
+    } else {
+      // Para ventas de contado, usar el endpoint existente
+      response = await api.post('/ventas/registrar', {
+        venta: ventaCompleta.venta,
+        detalles: ventaCompleta.detalles,
+        pago: ventaCompleta.pago
+      })
+      
+      showSnackbar('Venta registrada correctamente', 'success')
+    }
     
-    showSnackbar('Venta registrada correctamente', 'success')
+    console.log('Venta registrada con ID:', response.data.id_venta)
+    
+    // Cerrar diálogo y limpiar carrito
     showSaleDialog.value = false
-    cartActions.clearCart() // Limpiar el carrito después de la venta exitosa
-    
+    cartActions.clearCart()
   } catch (error) {
     console.error('Error al registrar la venta:', error)
     
     // Manejar errores específicos de la transacción
     if (error.response?.data?.detail) {
-      showSnackbar(error.response.data.detail, 'error')
+      if (typeof error.response.data.detail === 'string') {
+        showSnackbar(error.response.data.detail, 'error')
+      } else if (Array.isArray(error.response.data.detail)) {
+        const errorMessages = error.response.data.detail.map(err => err.msg).join(', ')
+        showSnackbar(errorMessages, 'error')
+      }
     } else {
-      showSnackbar('Error al registrar la venta', 'error')      // Error genérico
+      showSnackbar('Error al registrar la venta', 'error')
     }
     
     handleApiError(error, saleErrors)
@@ -83,6 +130,7 @@ async function handleSubmitSale(ventaCompleta) {
     submittingSale.value = false
   }
 }
+
 // Función auxiliar para manejar errores de API
 function handleApiError(error, errorRef) {
   console.log('Error de API:', error)
@@ -106,8 +154,6 @@ function handleApiError(error, errorRef) {
       }
 
       errorRef.value = backendErrors
-      const errorMessages = Object.values(backendErrors).join(', ')
-      showSnackbar(errorMessages || 'Ocurrió un error inesperado.', 'error')
     } else {
       const message = error.response.data?.message || `Error del servidor: ${error.response.status}`
       showSnackbar(message, 'error')
@@ -121,108 +167,220 @@ function handleApiError(error, errorRef) {
   }
 }
 
-function closeSaleDialog() {
+async function closeSaleDialog() {
   showSaleDialog.value = false
   saleErrors.value = {}
 }
 
+// Función para formatear precio
+function formatPrice(price) {
+  return parseFloat(price).toFixed(2)
+}
+
+// Función para obtener el total de un item
+function getItemTotal(item) {
+  return item.precio_usd * item.quantity
+}
+
 onMounted(() => {
-  fetchTasas();  
-});
+  fetchTasas()
+})
 </script>
 
 <template>
   <v-navigation-drawer
     location="right"
     :width="500"
+    permanent
   >
-    <v-list nav>
-      <v-list-item
-        v-for="(item, key) in selectedItems"
-        :key="item.cod_producto"
-        :class="key % 2 === 0 ? 'bg-grey-lighten-3' : ''"
-        density="compact"
-        lines="two"
-      >
-        <template #subtitle>
-          <span class="text-subtitle-2">
-            $ {{ cartActions.getItemTotal(item.cod_producto).toFixed(2) }}
-          </span>
-          <span class="text-subtitle-2 text-green"> |
-            Bs {{ (cartActions.getCartTotal() * tasas).toFixed(2) }}          
-          </span>
-        </template>
+    <!-- Header del carrito -->
+    <!-- <v-toolbar density="compact" color="primary">
+      <v-toolbar-title class="text-h6">
+        <v-icon class="mr-2">mdi-cart</v-icon>
+        Carrito de Compras
+      </v-toolbar-title>
+      <template #append>
+        <v-badge
+          :content="selectedItems.length"
+          :model-value="hasItems"
+          color="error"
+        >
+          <v-icon>mdi-cart</v-icon>
+        </v-badge>
+      </template>
+    </v-toolbar> -->
 
-        <template #title>
-          <span class="text-subtitle-2">
-            {{ item.nombre }}
-          </span>
-        </template>
+    <!-- Contenido del carrito -->
+    <template v-if="hasItems">
+      <v-list nav class="py-0">
+        <v-list-item
+          v-for="(item, index) in selectedItems"
+          :key="item.cod_producto"
+          :class="index % 2 === 0 ? 'bg-grey-lighten-4' : ''"
+          density="compact"
+          lines="two"
+          class="px-3 py-2"
+        >
+          <template #prepend>
+            <v-btn
+              icon="mdi-delete-outline"
+              variant="text"
+              size="small"
+              color="error"
+              @click="cartActions.removeItem(item.cod_producto)"
+            >
+            </v-btn>
+          </template>
 
-        <template #prepend>
-          <v-icon
-            class="cursor-pointer"
-            icon="mdi-delete-outline"
-            @click="cartActions.removeItem(item.cod_producto)"
-          />
-        </template>
+          <template #title>
+            <div class="text-subtitle-1 font-weight-medium">
+              {{ item.nombre }} 
+              
+              <div class="d-flex justify-space-between align-center mt-1">
+                
+                <!-- <div class="text-right mr-2">
+                  <div class="text-subtitle-2 font-weight-bold text-primary">
+                    ${{ formatPrice(getItemTotal(item)) }}
+                  </div>
+                  <div class="text-caption text-success">
+                    Bs {{ formatPrice(getItemTotal(item) * tasas) }}
+                  </div>
+                </div> -->
+              </div>
+            </div>
+            <div> 
+              <span class="text-caption text-medium-emphasis">
+                ${{ formatPrice(item.precio_usd) }} c/u
+              </span>
+            </div>
+          </template>
 
-        <template #append>
-          <v-number-input
-            v-model="cartActions.createItemQuantityModel(item.cod_producto).value"
-            control-variant="stacked"
-            density="compact"
-            hide-details
-            :min="1"
-            variant="outlined"
-            width="80"
-          />
-        </template>
-      </v-list-item>
-    </v-list>
+          <!-- <template #subtitle>
+            <div class="d-flex justify-space-between align-center mt-1">
+              <div> 
+                <span class="text-caption text-medium-emphasis">
+                  ${{ formatPrice(item.precio_usd) }} c/u
+                </span>
+              </div>
+              <div class="text-right">
+                <div class="text-subtitle-2 font-weight-bold text-primary">
+                  ${{ formatPrice(getItemTotal(item)) }}
+                </div>
+                <div class="text-caption text-success">
+                  Bs {{ formatPrice(getItemTotal(item) * tasas) }}
+                </div>
+              </div>
+            </div>
+          </template> -->
 
+          <template #append>
+            <div class="d-flex flex-column align-center">
+              <v-number-input
+                v-model="cartActions.createItemQuantityModel(item.cod_producto).value"
+                control-variant="stacked"
+                density="compact"
+                hide-details
+                :min="1"
+                variant="outlined"
+                width="90"
+                class="mb-1"
+              />
+            </div>
+          </template>
+        </v-list-item>
+      </v-list>
+    </template>
+
+    <!-- Estado vacío -->
+    <template v-else>
+      <v-container class="text-center py-8">
+        <v-icon size="64" color="grey-lighten-2" class="mb-4">
+          mdi-cart-outline
+        </v-icon>
+        <div class="text-h6 text-grey-darken-1 mb-2">
+          Carrito vacío
+        </div>
+        <div class="text-body-2 text-grey">
+          Agrega productos para comenzar tu compra
+        </div>
+      </v-container>
+    </template>
+
+    <!-- Footer con totales y acciones -->
     <template #append>
-      <v-container>
-        <v-row class="mb-2 d-flex justify-space-between" dense>
-          <span class="text-h6">
-            Total
-          </span>
+      <v-divider />
+      <v-container class="py-4">
+        <!-- Totales -->
+        <template v-if="hasItems">
+          <v-card variant="tonal" color="primary" class="mb-3">
+            <v-card-text class="py-3">
+              <div class="d-flex justify-space-between align-center mb-2">
+                <span class="text-body-1 font-weight-medium">Subtotal USD:</span>
+                <span class="text-h6 font-weight-bold">
+                  ${{ formatPrice(cartActions.getCartTotal()) }}
+                </span>
+              </div>
+              <div class="d-flex justify-space-between align-center">
+                <span class="text-body-1 font-weight-medium">Total Bs:</span>
+                <span class="text-h6 font-weight-bold text-success">
+                  Bs {{ totalBolivares }}
+                </span>
+              </div>
+            </v-card-text>
+          </v-card>
 
-          <span class="text-h6">
-            USD {{ cartActions.getCartTotal().toFixed(2) }}
-          </span>
-          <span class="text-h6 text-green">
-            Bs {{ (cartActions.getCartTotal() * tasas).toFixed(2) }}
-          </span>
+          <!-- Botones de acción -->
+          <v-row dense>
+            <v-col cols="6">
+              <v-btn
+                block
+                color="error"
+                variant="outlined"
+                prepend-icon="mdi-delete"
+                @click="cartActions.clearCart()"
+              >
+                Limpiar
+              </v-btn>
+            </v-col>
+            <v-col cols="6">
+              <v-btn
+                block
+                color="success"
+                variant="flat"
+                prepend-icon="mdi-cash-register"
+                :loading="submittingSale"
+                @click="handlerPay()"
+              >
+                Pagar
+              </v-btn>
+            </v-col>
+          </v-row>
 
-        </v-row>
+          <!-- Información adicional -->
+          <!-- <div class="text-center mt-3">
+            <div class="text-caption text-grey">
+              {{ selectedItems.length }} {{ selectedItems.length === 1 ? 'producto' : 'productos' }} en el carrito
+            </div>
+          </div> -->
+        </template>
 
-        <v-row dense>
-          <v-col>
-            <v-btn
-              block
-              color="primary"
-              text="eliminar"
-              variant="outlined"
-              @click="cartActions.clearCart()"
-            />
-          </v-col>
-
-          <v-col>
-            <v-btn
-              block
-              color="primary"
-              text="pagar"
-              variant="flat"
-              @click="handlerPay()"
-            />
-          </v-col>
-        </v-row>
+        <!-- Botón para actualizar tasa cuando está vacío -->
+        <template v-else>
+          <v-btn
+            block
+            variant="outlined"
+            prepend-icon="mdi-refresh"
+            @click="fetchTasas"
+            :loading="tasas === 0"
+          >
+            Actualizar Tasa
+          </v-btn>
+        </template>
       </v-container>
     </template>
   </v-navigation-drawer>
 
-  <!-- Diálogo de Venta -->
+  <!-- Diálogo de Venta integrado -->
   <SaleForm
     v-model:show="showSaleDialog"
     :loading="submittingSale"
@@ -230,7 +388,22 @@ onMounted(() => {
     :productos="selectedItems"
     :errors="saleErrors"
     :tasa_cambio="tasas"
+    :clientes="clientes"
     @submit="handleSubmitSale"
     @update:show="closeSaleDialog"
   />
 </template>
+
+<style scoped>
+.v-list-item {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.v-list-item:last-child {
+  border-bottom: none;
+}
+
+.v-number-input {
+  max-width: 90px;
+}
+</style>

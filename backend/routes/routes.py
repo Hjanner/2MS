@@ -5,6 +5,7 @@ from fastapi.params import Depends
 from backend.models.models import *
 from backend.controllers.controller import *
 from backend.models.view_models import DetalleProductoVenta, DetalleVentaCompleto, ResumenVenta
+from backend.services.transactions.ventaCredito_transaction import registrar_venta_completa, registrar_venta_credito_completa
 from backend.services.transactions.venta_transactions import registrar_venta_con_detalles_y_pago
 from .crud_factory import create_crud_router
 
@@ -52,6 +53,119 @@ def registrar_venta(payload: VentaTransaccionPayload):
             detail={
                 "success": False,
                 "error": "Error interno del servidor",
+                "message": str(e)
+            }
+        )
+        
+@ventas_router.post("/registrar_credito", response_model=VentaCreditoResponse)
+def registrar_venta_credito(payload: VentaCreditoTransaccionPayload):
+    """
+    Endpoint específico para registrar ventas a crédito con pago inicial opcional
+    """
+    try:
+        result = registrar_venta_credito_completa(
+            venta_data=payload.venta,
+            detalles_data=payload.detalles,
+            credito_data=payload.credito,
+            pago_inicial=payload.pago_inicial,
+            db_path=db_path
+        )
+        return result
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "success": False,
+                "error": "Error interno del servidor",
+                "message": str(e)
+            }
+        )
+
+# Endpoint unificado que maneja ambos tipos de venta
+@ventas_router.post("/registrar_completa")
+def registrar_venta_unificada(payload: VentaUnificadaPayload):
+    """
+    Endpoint unificado que puede manejar tanto ventas de contado como a crédito
+    basándose en el tipo_transaccion especificado
+    """
+    try:
+        result = registrar_venta_completa(
+            venta_data=payload.venta,
+            detalles_data=payload.detalles,
+            pago_data=payload.pago,
+            credito_data=payload.credito,
+            db_path=db_path
+        )
+        return result
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "success": False,
+                "error": "Error interno del servidor",
+                "message": str(e)
+            }
+        )
+
+# Endpoint para obtener estadísticas de créditos
+@ventas_router.get("/creditos/estadisticas")
+def obtener_estadisticas_creditos():
+    """
+    Obtiene estadísticas generales de los créditos
+    """
+    try:
+        import sqlite3
+        
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Contar créditos activos (no pagados completamente)
+        cursor.execute("""
+            SELECT COUNT(*) 
+            FROM Creditos 
+            WHERE estado != 'Pagado'
+        """)
+        total_activos = cursor.fetchone()[0]
+        
+        # Sumar monto pendiente
+        cursor.execute("""
+            SELECT SUM(monto_total - monto_pagado) 
+            FROM Creditos 
+            WHERE estado != 'Pagado'
+        """)
+        monto_pendiente = cursor.fetchone()[0] or 0
+        
+        # Contar créditos que podrían estar vencidos (más de 30 días sin abonos)
+        cursor.execute("""
+            SELECT COUNT(*) 
+            FROM Creditos 
+            WHERE estado != 'Pagado' 
+            AND (fecha_ultimo_abono IS NULL OR 
+                 DATE(fecha_ultimo_abono) < DATE('now', '-30 days'))
+        """)
+        creditos_vencidos = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return {
+            "success": True,
+            "estadisticas": {
+                "total_creditos_activos": total_activos,
+                "monto_total_pendiente": monto_pendiente,
+                "creditos_vencidos": creditos_vencidos
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "success": False,
+                "error": "Error al obtener estadísticas",
                 "message": str(e)
             }
         )

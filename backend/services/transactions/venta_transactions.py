@@ -35,7 +35,7 @@ def registrar_venta_con_detalles_y_pago(
         # if abs(total_detalles - venta_data.monto_total_bs) > 0.01:
         #     raise ValueError("El monto total no coincide con la suma de los productos")
         
-        if abs(pago_data.monto - venta_data.monto_total_bs) > 0.01:
+        if abs(pago_data.monto - venta_data.monto_total_bs) > 0.001:
             raise ValueError("El monto del pago no coincide con el total de la venta")
 
         # 2. Verificar stock antes de comenzar la transacción
