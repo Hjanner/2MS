@@ -1,8 +1,10 @@
 <script setup>
-import { inject, toRefs, ref, onMounted, computed } from 'vue'
+import { inject, toRefs, ref, onMounted, computed, watch } from 'vue'
 import SaleForm from '@/components/sale/SaleForm.vue'
 import SaleBillModal from '@/components/sale/SaleBillModal.vue'
+import LowStockAlert from '@/components/inventory/LowStockAlert.vue'
 import { useSnackbar } from '@/composables/useSnackbar'
+import { useStockValidation } from '@/composables/useStockValidation'
 import api from '@/api/api'
 
 const props = defineProps({
@@ -16,6 +18,17 @@ const { selectedItems } = toRefs(props)
 const cartActions = inject('cartActions')
 const { showSnackbar } = useSnackbar()
 
+// Usar el composable de validación de stock
+const {
+  lowStockProducts,
+  outOfStockProducts,
+  fetchProductosStock,
+  validateCartStock,
+  getProductStockStatus,
+  canProceedWithSale,
+  getCartStockSummary
+} = useStockValidation()
+
 // Estados para el diálogo de venta y factura
 const showSaleDialog = ref(false)
 const submittingSale = ref(false)
@@ -26,6 +39,10 @@ const showFactura = ref(false)
 const facturaVenta = ref(null)
 const facturaDetalles = ref([])
 
+// Estados para validación de stock
+const showStockAlert = ref(false)
+const currentStockValidation = ref({ errors: [], warnings: [], hasErrors: false })
+
 // Computed para el total en bolívares
 const totalBolivares = computed(() => {
   return (cartActions.getCartTotal() * tasas.value).toFixed(2)
@@ -35,6 +52,26 @@ const totalBolivares = computed(() => {
 const hasItems = computed(() => {
   return selectedItems.value.length > 0
 })
+
+// Computed para determinar si se puede proceder con la venta
+const canProceedSale = computed(() => {
+  return !currentStockValidation.value.hasErrors
+})
+
+// Watch para validar stock cuando cambie el carrito
+watch(selectedItems, (newItems) => {
+  if (newItems.length > 0) {
+    currentStockValidation.value = validateCartStock(newItems)
+    
+    // Mostrar alert si hay errores críticos
+    if (currentStockValidation.value.hasErrors) {
+      showStockAlert.value = true
+    }
+  } else {
+    currentStockValidation.value = { errors: [], warnings: [], hasErrors: false }
+    showStockAlert.value = false
+  }
+}, { deep: true })
 
 async function fetchClientes() {
   try {
@@ -61,7 +98,7 @@ async function fetchTasas() {
   }
 }
 
-// Función para manejar el pago
+// Función para manejar el pago con validación de stock
 async function handlerPay() {
   if (selectedItems.value.length === 0) {
     showSnackbar('No hay productos en el carrito', 'warning')
@@ -69,19 +106,33 @@ async function handlerPay() {
   }
   
   try {
-    // Cargar tasas y clientes antes de abrir el diálogo
-    await Promise.all([fetchTasas(), fetchClientes()])
-    showSaleDialog.value = true
+    // Cargar datos necesarios
+    await Promise.all([fetchTasas(), fetchClientes(), fetchProductosStock()])
+    
+    // Validar stock y mostrar notificaciones
+    const canProceed = canProceedWithSale(selectedItems.value)
+    
+    if (canProceed) {
+      showSaleDialog.value = true
+    } else {
+      showSnackbar('No se puede proceder con la venta debido a problemas de stock', 'error')
+    }
   } catch (error) {
     console.error('Error al cargar datos:', error)
     showSnackbar('Error al cargar datos necesarios para la venta', 'error')
   }
 }
 
-// Función para manejar el envío de la venta
-
-let ventaPendiente = null
+// Función para manejar el envío de la venta (con validación final)
 async function handleSubmitSale(ventaCompleta) {
+  // Validación final antes de enviar
+  const finalValidation = validateCartStock(selectedItems.value)
+  
+  if (finalValidation.hasErrors) {
+    showSnackbar('No se puede completar la venta: Stock insuficiente', 'error')
+    return
+  }
+  
   submittingSale.value = true
   saleErrors.value = {}
   try {
@@ -100,16 +151,31 @@ async function handleSubmitSale(ventaCompleta) {
         detalles: ventaCompleta.detalles,
         pago: ventaCompleta.pago
       })
+      showSnackbar('Venta registrada correctamente', 'success')
     }
-    // Mostrar factura, pero no limpiar ni fetch hasta confirmar
+    
+    // Mostrar factura
     facturaVenta.value = { ...ventaCompleta.venta, ...response.data }
     facturaDetalles.value = ventaCompleta.detalles.map(det => {
       const prod = selectedItems.value.find(p => p.cod_producto === det.cod_producto)
       return { ...det, nombre: prod ? prod.nombre : det.cod_producto }
     })
-    ventaPendiente = { venta: facturaVenta.value, detalles: facturaDetalles.value }
     showFactura.value = true
+    
+    // Cerrar diálogo y limpiar carrito
     showSaleDialog.value = false
+    cartActions.clearCart()
+    
+    // Actualizar stock después de la venta exitosa
+    await fetchProductosStock()
+    
+    // Verificar si hay nuevos productos en stock bajo después de la venta
+    setTimeout(() => {
+      if (lowStockProducts.value.length > 0) {
+        showSnackbar(`Atención: ${lowStockProducts.value.length} productos han quedado en stock bajo`, 'info')
+      }
+    }, 1000)
+    
   } catch (error) {
     console.error('Error al registrar la venta:', error)
     if (error.response?.data?.detail) {
@@ -126,14 +192,6 @@ async function handleSubmitSale(ventaCompleta) {
   } finally {
     submittingSale.value = false
   }
-}
-
-function onConfirmFactura() {
-  fetchTasas()
-  fetchClientes()
-  cartActions.clearCart()
-  showSnackbar('Venta registrada correctamente', 'success')
-  ventaPendiente = null
 }
 
 // Función auxiliar para manejar errores de API
@@ -189,6 +247,7 @@ function getItemTotal(item) {
 
 onMounted(() => {
   fetchTasas()
+  fetchProductosStock()
 })
 </script>
 
@@ -198,22 +257,47 @@ onMounted(() => {
     :width="500"
     permanent
   >
-    <!-- Header del carrito -->
-    <!-- <v-toolbar density="compact" color="primary">
-      <v-toolbar-title class="text-h6">
-        <v-icon class="mr-2">mdi-cart</v-icon>
-        Carrito de Compras
-      </v-toolbar-title>
-      <template #append>
-        <v-badge
-          :content="selectedItems.length"
-          :model-value="hasItems"
-          color="error"
-        >
-          <v-icon>mdi-cart</v-icon>
-        </v-badge>
-      </template>
-    </v-toolbar> -->
+    <!-- Alertas de stock bajo -->
+    <LowStockAlert 
+      :low-stock-products="lowStockProducts"
+      :out-of-stock-products="outOfStockProducts"
+    />
+
+    <!-- Alert de errores de stock durante validación -->
+    <v-alert
+      v-if="showStockAlert && currentStockValidation.hasErrors"
+      type="error"
+      variant="tonal"
+      closable
+      class="ma-3"
+      @click:close="showStockAlert = false"
+    >
+      <v-alert-title>
+        <v-icon>mdi-alert-circle</v-icon>
+        No se puede completar la venta
+      </v-alert-title>
+      <div class="mt-2">
+        <div v-for="error in currentStockValidation.errors" :key="error.cod_producto" class="mb-1">
+          • {{ error.mensaje }}
+        </div>
+      </div>
+    </v-alert>
+
+    <!-- Alert de advertencias de stock -->
+    <v-alert
+      v-if="currentStockValidation.hasWarnings && !currentStockValidation.hasErrors"
+      type="warning"
+      variant="tonal"
+      density="compact"
+      class="ma-3"
+    >
+      <div class="d-flex align-center">
+        <v-icon size="small" class="mr-2">mdi-information</v-icon>
+        <span class="text-caption">
+          {{ currentStockValidation.warnings.length }} producto(s) con advertencias de stock
+        </span>
+      </div>
+    </v-alert>
 
     <!-- Contenido del carrito -->
     <template v-if="hasItems">
@@ -221,9 +305,12 @@ onMounted(() => {
         <v-list-item
           v-for="(item, index) in selectedItems"
           :key="item.cod_producto"
-          :class="index % 2 === 0 ? 'bg-grey-lighten-4' : ''"
+          :class="[
+            index % 2 === 0 ? 'bg-grey-lighten-4' : '',
+            getProductStockStatus(item).status === 'insufficient' ? 'border-error' : ''
+          ]"
           density="compact"
-          lines="two"
+          lines="three"
           class="px-3 py-2"
         >
           <template #prepend>
@@ -239,44 +326,26 @@ onMounted(() => {
 
           <template #title>
             <div class="text-subtitle-1 font-weight-medium">
-              {{ item.nombre }} 
-              
-              <div class="d-flex justify-space-between align-center mt-1">
-                
-                <!-- <div class="text-right mr-2">
-                  <div class="text-subtitle-2 font-weight-bold text-primary">
-                    ${{ formatPrice(getItemTotal(item)) }}
-                  </div>
-                  <div class="text-caption text-success">
-                    Bs {{ formatPrice(getItemTotal(item) * tasas) }}
-                  </div>
-                </div> -->
-              </div>
+              {{ item.nombre }}
             </div>
             <div> 
               <span class="text-caption text-medium-emphasis">
                 ${{ formatPrice(item.precio_usd) }} c/u
               </span>
             </div>
-          </template>
-
-          <!-- <template #subtitle>
-            <div class="d-flex justify-space-between align-center mt-1">
-              <div> 
-                <span class="text-caption text-medium-emphasis">
-                  ${{ formatPrice(item.precio_usd) }} c/u
-                </span>
-              </div>
-              <div class="text-right">
-                <div class="text-subtitle-2 font-weight-bold text-primary">
-                  ${{ formatPrice(getItemTotal(item)) }}
-                </div>
-                <div class="text-caption text-success">
-                  Bs {{ formatPrice(getItemTotal(item) * tasas) }}
-                </div>
-              </div>
+            
+            <!-- Indicador de estado de stock -->
+            <div class="mt-1">
+              <v-chip
+                :color="getProductStockStatus(item).color"
+                size="x-small"
+                variant="tonal"
+                :prepend-icon="getProductStockStatus(item).icon"
+              >
+                {{ getProductStockStatus(item).message }}
+              </v-chip>
             </div>
-          </template> -->
+          </template>
 
           <template #append>
             <div class="d-flex flex-column align-center">
@@ -289,7 +358,43 @@ onMounted(() => {
                 variant="outlined"
                 width="90"
                 class="mb-1"
+                :error="getProductStockStatus(item).status === 'insufficient'"
               />
+              
+              <!-- Indicador visual de stock crítico -->
+              <v-tooltip
+                v-if="getProductStockStatus(item).status === 'insufficient'"
+                text="Stock insuficiente"
+                location="left"
+              >
+                <template #activator="{ props: tooltipProps }">
+                  <v-icon
+                    v-bind="tooltipProps"
+                    size="small"
+                    color="error"
+                    class="mt-1"
+                  >
+                    mdi-alert-circle
+                  </v-icon>
+                </template>
+              </v-tooltip>
+              
+              <v-tooltip
+                v-else-if="getProductStockStatus(item).status === 'low'"
+                text="Stock bajo"
+                location="left"
+              >
+                <template #activator="{ props: tooltipProps }">
+                  <v-icon
+                    v-bind="tooltipProps"
+                    size="small"
+                    color="warning"
+                    class="mt-1"
+                  >
+                    mdi-alert
+                  </v-icon>
+                </template>
+              </v-tooltip>
             </div>
           </template>
         </v-list-item>
@@ -334,6 +439,30 @@ onMounted(() => {
             </v-card-text>
           </v-card>
 
+          <!-- Resumen de estado de stock -->
+          <v-card
+            v-if="currentStockValidation.hasErrors || currentStockValidation.hasWarnings"
+            variant="tonal"
+            :color="currentStockValidation.hasErrors ? 'error' : 'warning'"
+            class="mb-3"
+          >
+            <!-- <v-card-text class="py-2">
+              <div class="d-flex align-center">
+                <v-icon 
+                  :color="currentStockValidation.hasErrors ? 'error' : 'warning'"
+                  size="small"
+                  class="mr-2"
+                >
+                  {{ currentStockValidation.hasErrors ? 'mdi-alert-circle' : 'mdi-alert' }}
+                </v-icon>
+                <span class="text-caption">
+                  {{ currentStockValidation.hasErrors ? 'Productos sin stock suficiente' : 'Productos con advertencias de stock' }}
+                  ({{ currentStockValidation.errors.length + currentStockValidation.warnings.length }})
+                </span>
+              </div>
+            </v-card-text> -->
+          </v-card>
+
           <!-- Botones de acción -->
           <v-row dense>
             <v-col cols="6">
@@ -354,6 +483,7 @@ onMounted(() => {
                 variant="flat"
                 prepend-icon="mdi-cash-register"
                 :loading="submittingSale"
+                :disabled="!canProceedSale"
                 @click="handlerPay()"
               >
                 Pagar
@@ -361,26 +491,41 @@ onMounted(() => {
             </v-col>
           </v-row>
 
-          <!-- Información adicional -->
+          <!-- Información adicional del carrito -->
           <!-- <div class="text-center mt-3">
             <div class="text-caption text-grey">
               {{ selectedItems.length }} {{ selectedItems.length === 1 ? 'producto' : 'productos' }} en el carrito
+            </div>
+            <div v-if="currentStockValidation.hasErrors || currentStockValidation.hasWarnings" class="text-caption mt-1">
+              <v-icon size="x-small" class="mr-1">mdi-information</v-icon>
+              Revisa el estado del stock antes de proceder
             </div>
           </div> -->
         </template>
 
         <!-- Botón para actualizar tasa cuando está vacío -->
-        <template v-else>
+        <!-- <template v-else>
           <v-btn
             block
             variant="outlined"
             prepend-icon="mdi-refresh"
             @click="fetchTasas"
             :loading="tasas === 0"
+            class="mb-2"
           >
             Actualizar Tasa
           </v-btn>
-        </template>
+          
+          <v-btn
+            block
+            variant="outlined"
+            prepend-icon="mdi-package-variant"
+            @click="fetchProductosStock"
+            :loading="loading"
+          >
+            Actualizar Stock
+          </v-btn>
+        </template> -->
       </v-container>
     </template>
   </v-navigation-drawer>
@@ -397,25 +542,40 @@ onMounted(() => {
     @submit="handleSubmitSale"
     @update:show="closeSaleDialog"
   />
+  
   <SaleBillModal
     v-model:show="showFactura"
     :venta="facturaVenta"
     :detalles="facturaDetalles"
     :clientes="clientes"
-    @confirm="onConfirmFactura"
   />
 </template>
 
 <style scoped>
 .v-list-item {
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
 }
 
 .v-list-item:last-child {
   border-bottom: none;
 }
 
+.v-list-item.border-error {
+  border-left: 4px solid rgb(var(--v-theme-error));
+  background-color: rgba(var(--v-theme-error), 0.05);
+}
+
 .v-number-input {
   max-width: 90px;
+}
+
+/* Animación para chips de stock */
+.v-chip {
+  transition: all 0.3s ease;
+}
+
+.v-chip:hover {
+  transform: scale(1.05);
 }
 </style>
