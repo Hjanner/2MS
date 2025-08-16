@@ -8,8 +8,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AdjuntementForm: typeof import('./src/components/inventory/AdjuntementForm.vue')['default']
-    AdjustementForm: typeof import('./src/components/inventory/AdjustementForm.vue')['default']
     AdjustmentForm: typeof import('./src/components/inventory/AdjustmentForm.vue')['default']
     Appbar: typeof import('./src/components/Appbar.vue')['default']
     BacktoHome: typeof import('./src/components/common/BacktoHome.vue')['default']
@@ -24,7 +22,6 @@ declare module 'vue' {
     ClientForm: typeof import('./src/components/client/ClientForm.vue')['default']
     ClientList: typeof import('./src/components/client/ClientList.vue')['default']
     DebtList: typeof import('./src/components/debt/DebtList.vue')['default']
-    ExchaneRateForm: typeof import('./src/components/exchange/ExchangeRateForm.vue')['default']
     ExchangeRateForm: typeof import('./src/components/exchange/ExchangeRateForm.vue')['default']
     ExchangeRateList: typeof import('./src/components/exchange/ExchangeRateList.vue')['default']
     GuardarTasaBtn: typeof import('./src/components/GuardarTasaBtn.vue')['default']
@@ -35,16 +32,12 @@ declare module 'vue' {
     OrderSummary: typeof import('./src/components/OrderSummary.vue')['default']
     PaymentModal: typeof import('./src/components/debt/PaymentModal.vue')['default']
     PaymentsDetail: typeof import('./src/components/payments/PaymentsDetail.vue')['default']
-    PaymentsDetails: typeof import('./src/components/payments/PaymentsDetail.vue')['default']
     PaymentsList: typeof import('./src/components/payments/PaymentsList.vue')['default']
     ProductBasicInfo: typeof import('./src/components/forms/ProductBasicInfo.vue')['default']
     ProductDetailModal: typeof import('./src/components/product/ProductDetailModal.vue')['default']
-    ProductDetailRow: typeof import('./src/components/product/ProductDetailRow.vue')['default']
     ProductForm: typeof import('./src/components/product/ProductForm.vue')['default']
     ProductInventoryInfo: typeof import('./src/components/forms/ProductInventoryInfo.vue')['default']
-    ProductList: typeof import('./src/components/product/ProductList.vue')['default']
     ProductPreparationInfo: typeof import('./src/components/forms/ProductPreparationInfo.vue')['default']
-    ProductTable: typeof import('./src/components/product/ProductTable.vue')['default']
     PurchaseDetailDialog: typeof import('./src/components/purchase/PurchaseDetailDialog.vue')['default']
     PurchaseForm: typeof import('./src/components/purchase/PurchaseForm.vue')['default']
     PurchasesList: typeof import('./src/components/purchase/PurchasesList.vue')['default']
@@ -60,6 +53,5 @@ declare module 'vue' {
     SkeletonGrid: typeof import('./src/components/SkeletonGrid.vue')['default']
     SupplierForm: typeof import('./src/components/supplier/SupplierForm.vue')['default']
     SupplierList: typeof import('./src/components/supplier/SupplierList.vue')['default']
-    VentaFacturaModal: typeof import('./src/components/sale/VentaFacturaModal.vue')['default']
   }
 }

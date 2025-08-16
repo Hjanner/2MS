@@ -1,51 +1,119 @@
 # 2MS
 Morela's Management System (2MS) está diseñado para automatizar y optimizar los procesos clave del Cafetin Morela. 
-Este proyecto utiliza FastAPI como backend y ReactPy como frontend para crear una aplicación interactiva.
+Este proyecto utiliza FastAPI como backend y Vue 3 + Electron como frontend para crear una aplicación interactiva de escritorio y web.
 
 # Requisitos
 Antes de comenzar, asegúrate de tener instalados los siguientes programas:
 
-Python 3.9 o superior
-pip (administrador de paquetes de Python)
+- Python 3.9 o superior
+- pip (administrador de paquetes de Python)
+- Node.js y npm
 
 # Instalación
 Clona este repositorio:
 
+```bash
 git clone https://github.com/Hjanner/2MS.git
 cd 2MS
-Activa un entorno virtual (opcional pero recomendado): En Windows: bash venv\Scripts\activate  En Linux: bash source venv/bin/activate 
+```
 
-Instala las dependencias:
+Activa un entorno virtual (opcional pero recomendado):  
+En Windows:
+```bash
+venv\Scripts\activate
+```
+En Linux:
+```bash
+source venv/bin/activate
+```
 
+Instala las dependencias de Python:
+
+```bash
 pip install -r requirements.txt
+```
 
-# crear y llenar base de datos, con datos beta
+Instala las dependencias de Node.js:
+
+```bash
+npm install
+```
+
+# Crear y llenar base de datos, con datos beta
+
 ```bash
 python database/create_db.py
-```
-
-```bash
 python database/insert_db.py
-```
-
-```bash
 python database/triggers_db.py
-```
-
-```bash
 python database/views_db.py   
 ```
 
-# Ejecución
-Inicia el servidor FastAPI:
+O puedes ejecutar todos los scripts de la base de datos con:
 
-uvicorn backend.main:app --reload
-Accede a la aplicación en tu navegador:
+```bash
+npm run db:init
+```
 
-Frontend ReactPy: http://127.0.0.1:8000
-Documentación interactiva: http://127.0.0.1:8000/docs
+# Comandos para desarrollo
+
+## Primera terminal (Backend + DB):
+
+```bash
+cd backend
+../venv/Scripts/activate  # O venv\Scripts\activate si estás en la raíz
+uvicorn main:app --reload
+```
+
+Ejecuta los scripts de la base de datos si es necesario:
+
+```bash
+npm run db:init
+```
+
+## Segunda terminal (Frontend Vue + Electron):
+
+```bash
+npm run electron:dev
+```
+
+Esto iniciará el frontend en modo desarrollo y abrirá la aplicación de escritorio con Electron.
+
+---
+
+# Ejecución en producción
+Compila el frontend y ejecuta la app de escritorio:
+
+## 1. Construir frontend
+```bash
+npm run build
+```
+
+## 2. Ejecutar scripts de base de datos (opcional, dependiendo de tu flujo)
+```bash
+npm run db:init
+```
+
+## 3. Construir aplicación Electron
+```bash
+npm run electron:build
+```
+
+```bash
+npm run build
+npm run electron:build
+```
+
+---
+
+# Acceso a la aplicación web
+
+- Frontend Vue: http://localhost:3000 (en desarrollo)
+- Documentación interactiva FastAPI: http://127.0.0.1:8000/docs
+
+---
 
 # Script para guardar tasa del BCV
+
 ```bash
 python -m backend.utilities.save_tasa
 ```
@@ -82,8 +150,5 @@ Usar **Task Scheduler de Windows**
   ```
 - Revisa que la tasa se guarde correctamente en la base de datos.
 
-
-
 # Licencia
-Este proyecto está bajo la licencia MIT.
-
+Este proyecto está bajo la licencia

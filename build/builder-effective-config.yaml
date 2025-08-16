@@ -1,0 +1,31 @@
+directories:
+  output: build
+  buildResources: build
+appId: com.morela.2ms
+productName: Morela's Management System
+files:
+  - filter:
+      - dist/**/*
+      - electron/**/*
+extraResources:
+  - from: backend
+    to: backend
+    filter:
+      - '**/*'
+  - from: database
+    to: database
+    filter:
+      - '**/*'
+  - from: public
+    to: public
+    filter:
+      - '**/*'
+win:
+  target: nsis
+  icon: public/icon.ico
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+asar: false
+electronVersion: 37.3.0
