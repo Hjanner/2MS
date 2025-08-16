@@ -1,5 +1,5 @@
 {
-  "name": "2ms-frontend",
+  "name": "2ms",
   "description": "Morela's Management System (2MS) está diseñado para automatizar y optimizar los procesos clave del Cafetin Morela.",
   "author": "Hanner Hernandez <hjanner918@email.com, Github: Hjanner> | Carlos Gomez <>",
   "private": true,
@@ -10,8 +10,11 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "clean": "rm -rf dist build node_modules/.vite",
+    "clean:win": "if exist dist rmdir /s /q dist && if exist build rmdir /s /q build && if exist node_modules\\.vite rmdir /s /q node_modules\\.vite",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:3000 && electron .\"",
     "electron:build": "npm run build && electron-builder",
+    "electron:pack": "npm run build && electron-builder --dir",
     "start": "electron .",
     "db:init": "python database/create_db.py && python database/insert_db.py && python database/triggers_db.py && python database/views_db.py"
   },

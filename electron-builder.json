@@ -6,28 +6,23 @@
   },
   "files": [
     "dist/**/*",
-    "electron/**/*"
+    "electron/**/*",
+    "package.json"
   ],
   "extraResources": [
     {
       "from": "backend",
       "to": "backend",
-      "filter": ["**/*"]
+      "filter": ["**/*", "!**/__pycache__", "!**/*.pyc", "!**/venv", "!**/.env"]
     },
     {
       "from": "database",
       "to": "database",
       "filter": ["**/*"]
-    },
-    {
-      "from": "public",
-      "to": "public",
-      "filter": ["**/*"]
     }
   ],
   "win": {
-    "target": "nsis",
-    "icon": "public/icon.ico"
+    "target": "nsis"
   },
   "nsis": {
     "oneClick": false,

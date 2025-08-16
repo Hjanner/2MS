@@ -41,6 +41,10 @@ app.add_middleware(
 
 app.mount("/public", StaticFiles(directory="public"), name="public")            #para servir la imagenes
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "message": "Backend is running"}
+
 
 from backend.routes.routes import *
 app.include_router(clientes_router)

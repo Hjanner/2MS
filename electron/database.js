@@ -1,8 +1,13 @@
-const { spawn } = require('child_process')
-const path = require('path')
+import { spawn } from 'child_process'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
 
-function runDatabaseScripts() {
-  return new Promise((resolve) => {
+// Crear __dirname para ES modules
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+export function runDatabaseScripts() {
+  return new Promise((resolve, reject) => {
     const scripts = [
       'create_db.py',
       'insert_db.py',
@@ -11,36 +16,57 @@ function runDatabaseScripts() {
     ]
     
     const pythonPath = process.env.NODE_ENV === 'development'
-      ? path.join(__dirname, '../backend/venv/Scripts/python.exe')
-      : path.join(process.resourcesPath, 'backend/venv/Scripts/python.exe')
+      ? join(__dirname, '../backend/venv/Scripts/python.exe')
+      : join(process.resourcesPath, 'backend/venv/Scripts/python.exe')
     
     let completed = 0
+    let hasError = false
     
     scripts.forEach(script => {
       const scriptPath = process.env.NODE_ENV === 'development'
-        ? path.join(__dirname, `../database/${script}`)
-        : path.join(process.resourcesPath, `database/${script}`)
+        ? join(__dirname, `../database/${script}`)
+        : join(process.resourcesPath, `database/${script}`)
       
-      const process = spawn(pythonPath, [scriptPath], {
+      const pythonProcess = spawn(pythonPath, [scriptPath], {
         cwd: process.env.NODE_ENV === 'development'
-          ? path.join(__dirname, '../database')
-          : path.join(process.resourcesPath, 'database')
+          ? join(__dirname, '../database')
+          : join(process.resourcesPath, 'database')
       })
       
-      process.stdout.on('data', (data) => {
+      pythonProcess.stdout.on('data', (data) => {
         console.log(`DB ${script}: ${data}`)
       })
       
-      process.stderr.on('data', (data) => {
+      pythonProcess.stderr.on('data', (data) => {
         console.error(`DB ${script} ERROR: ${data}`)
       })
       
-      process.on('close', () => {
+      pythonProcess.on('close', (code) => {
         completed++
-        if (completed === scripts.length) resolve()
+        if (code !== 0) {
+          hasError = true
+          console.error(`Script ${script} failed with code ${code}`)
+        }
+        
+        if (completed === scripts.length) {
+          if (hasError) {
+            reject(new Error('Some database scripts failed'))
+          } else {
+            resolve()
+          }
+        }
+      })
+
+      pythonProcess.on('error', (error) => {
+        console.error(`Failed to run ${script}:`, error)
+        hasError = true
+        completed++
+        if (completed === scripts.length) {
+          reject(error)
+        }
       })
     })
   })
 }
 
-module.exports = { runDatabaseScripts }
+export default { runDatabaseScripts }
