@@ -1,4 +1,8 @@
+from datetime import datetime
 from typing import List, Optional, TypeVar, Generic, Dict, Any
+from fastapi import HTTPException
+from backend.models.view_models import ProductoVistaBase, ProductoVistaNoPreparado, ProductoVistaPreparado
+from backend.services.base_service import DuplicateKeyError
 
 T = TypeVar('T')  # Modelo Pydantic
 
@@ -42,8 +46,29 @@ class BaseController(Generic[T]):
         """
         Crea un nuevo registro en la entidad.
         :param obj_in: Instancia del modelo a crear.
+        :raises HTTPException: 409 si hay duplicados, 400 para otros errores.
         """
-        return self.service.create(obj_in)
+        try:
+            return self.service.create(obj_in)
+
+        except DuplicateKeyError as e:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": e.message,
+                    "field": e.field,
+                    "value": e.value,
+                    "code": "DUPLICATE_KEY"
+                }
+            )
+        # except Exception as e:
+        #     raise HTTPException(
+        #         status_code=400,
+        #         detail={
+        #             "message": f"Error al crear el registro: {str(e)}",
+        #             "code": "CREATE_ERROR"
+        #         }
+        #     )
 
     def update(self, id_field: str, id_value, obj_in: T) -> bool:
         """
@@ -81,3 +106,61 @@ class BaseController(Generic[T]):
         """
         return self.service.delete_by_keys(keys)
     
+    async def create_with_file(self, obj_in) -> Any:
+        """
+        Crea un nuevo registro con archivo adjunto.
+        :param obj_in: Instancia del modelo con archivo
+        :raises HTTPException: 409 si hay duplicados, 400 para otros errores
+        """
+        try:
+            if hasattr(self.service, 'create_with_file'):
+                return await self.service.create_with_file(obj_in)
+            return self.service.create(obj_in)
+        except DuplicateKeyError as e:
+            raise HTTPException(status_code=409, detail={
+                "message": e.message,
+                "field": e.field,
+                "value": e.value
+            })
+
+    def get_producto_completo(self) -> List[ProductoVistaBase]:
+        productos_data = self.service.get_productos_completos()
+        productos = []
+        
+        for prod in productos_data:
+            if prod['tipo_producto'] == 'preparado':
+                productos.append(ProductoVistaPreparado(**prod))
+            elif prod['tipo_producto'] == 'noPreparado':
+                productos.append(ProductoVistaNoPreparado(**prod))
+            else:
+                productos.append(ProductoVistaBase(**prod))
+        
+        return productos
+
+    def get_last_record(self, id_field: str ) -> Any:
+        return self.service.get_last_record(id_field)
+    
+    def get_list_from_date(
+        self, 
+        fecha_inicio: Optional[str] = None,
+        fecha_fin: Optional[str] = None,
+        field_key: str = 'fecha',  # Ahora acepta field_key
+        order_field: Optional[str] = None,
+        order_direction: str = 'DESC'
+    ) -> List[Any]:
+        try:
+            result = self.service.get_data_from_date(
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin,
+                field_key=field_key,
+                order_field=order_field,
+                order_direction=order_direction
+            )
+            return result
+        except ValueError as ve:
+            raise HTTPException(status_code=400, detail=str(ve))
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error al obtener lista: {str(e)}"
+            )

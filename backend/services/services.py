@@ -1,9 +1,14 @@
 from backend.models.models import *
+
 from database.database import db_path
 from backend.services.base_service import BaseService
-from .pydolarve_service import PyDolarVE
 
-cliente_service = BaseService(Cliente, "Clientes", db_path)
+from backend.models.view_models import ProductoVistaBase
+from backend.services.ventaDetalle_services import VentaDetalleService
+from backend.services.comprasDetalle_service import CompraService
+
+
+cliente_service = BaseService(Cliente, "Clientes", db_path, unique_fields=["ci_cliente"])
 proveedor_service = BaseService(Proveedor, "Proveedores", db_path)
 producto_service = BaseService(Producto, "Productos", db_path)
 venta_service = BaseService(Venta, "Ventas", db_path)
@@ -12,8 +17,11 @@ categoria_producto_service = BaseService(CategoriaProducto, "Categoria_productos
 compra_service = BaseService(Compra, "Compras", db_path)
 credito_service = BaseService(Credito, "Creditos", db_path)
 pago_service = BaseService(Pago, "Pagos", db_path)
-inventario_service = BaseService(Inventario, "Inventarios", db_path)
+movimiento_service = BaseService(Movimiento, "Movimientos", db_path)
 detalle_venta_service = BaseService(DetalleVenta, "Detalle_Venta", db_path)
-compra_inventario_service = BaseService(CompraInventario, "Compra_Inventario", db_path)
 producto_preparado_service = BaseService(ProductoPreparado, "Productos_preparados", db_path)
 producto_no_preparado_service = BaseService(ProductoNoPreparado, "Productos_noPreparados", db_path)
+
+vistaProductos_service = BaseService(ProductoVistaBase, "vista_productos_completos", db_path)
+vistaCompras_service = CompraService(db_path)
+vistaVentas_services = VentaDetalleService(db_path)

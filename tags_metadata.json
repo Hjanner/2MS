@@ -44,15 +44,11 @@
         "description": "Operaciones con Pagos"
     },
     {
-        "name": "Inventarios",
-        "description": "Operaciones con Inventarios"
+        "name": "Movimientos",
+        "description": "Operaciones con movimiento de inventario"
     },
     {
         "name": "Detalle_Venta",
         "description": "Operaciones con Detalle de Venta"
-    },
-    {
-        "name": "Compra_Inventario",
-        "description": "Operaciones con Compra e Inventario"
     }
 ]

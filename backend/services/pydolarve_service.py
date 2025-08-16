@@ -1,7 +1,6 @@
 from datetime import datetime
 import httpx 
 from backend.models.models import TasaCambio
-from backend.services.base_service import BaseService
 
 class PyDolarVE: 
     """
@@ -19,11 +18,10 @@ class PyDolarVE:
 
     async def get_precio_dolar(self): 
         data = await self.get_data()
-        print(data)
         if data:
             valor_usd_bs = data['price']
             fecha_str = data['last_update'].strip()  # '18/07/2025, 12:00 AM'
-            fecha = datetime.strptime(fecha_str, "%d/%m/%Y, %I:%M %p")  
+            fecha = datetime.now()
             origen = 'BCV'
             
             return TasaCambio(

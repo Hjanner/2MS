@@ -46,7 +46,7 @@ class ProductoValidators:
         v = validate_not_empty(v, "Código de producto")
         return v.upper()
 
-    @field_validator('precio')
+    @field_validator('precio_usd')
     @classmethod
     def validate_precio(cls, v):
         return validate_positive_number(v, "Precio")
@@ -91,8 +91,8 @@ class ProductoPreparadoValidators:
 class ProductoNoPreparadoValidators:
     @field_validator('cant_min', 'cant_actual', 'costo_compra')
     @classmethod
-    def validate_numericos(cls, v, field):
-        return validate_non_negative_number(v, field.name)
+    def validate_numericos(cls, v, info):
+        return validate_non_negative_number(v, info.field_name)
 
     @field_validator('unidad_medida')
     @classmethod
@@ -105,7 +105,7 @@ class PagoValidators:
     @classmethod
     def validate_metodo(cls, v):
         metodos_validos = [
-            'efectivo_bs', 'efectvo_usd',
+            'efectivo_bs', 'efectivo_usd',
             'pago_movil', 'debito', 'transferencia'
         ]
         return validate_enum(v, metodos_validos, "Método de pago")
@@ -115,7 +115,7 @@ class PagoValidators:
     def validate_monto(cls, v):
         return validate_positive_number(v, "Monto")
 
-class InventarioValidators:
+class MovimientoValidators:
     @field_validator('referencia')
     @classmethod
     def validate_referencia(cls, v):
@@ -138,11 +138,5 @@ class InventarioValidators:
 class DetalleVentaValidators:
     @field_validator('cantidad_producto', 'precio_unitario')
     @classmethod
-    def validate_detalle(cls, v, field):
-        return validate_positive_number(v, field.name)
-
-class CompraInventarioValidators:
-    @field_validator('cant_comprada', 'monto_unitario')
-    @classmethod
-    def validate_compra(cls, v, field):
-        return validate_positive_number(v, field.name)
+    def validate_detalle(cls, v, info):
+        return validate_positive_number(v, info.field_name)

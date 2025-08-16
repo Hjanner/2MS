@@ -1,6 +1,4 @@
 #contiene validaciones comunes
-import re
-
 def validate_only_digits(value: str, field_name: str) -> str:
     if not value.isdigit():
         raise ValueError(f"{field_name} debe contener solo números")
@@ -12,8 +10,8 @@ def validate_max_length(value: str, max_len: int, field_name: str) -> str:
     return value
 
 def validate_phone(value: str, field_name: str = "Teléfono") -> str:
-    if not value.startswith('0') or not value.isdigit() or len(value) != 11:
-        raise ValueError(f"{field_name} debe comenzar con 0 y tener exactamente 11 dígitos numéricos")
+    if not value.isdigit() or len(value) != 11:
+        raise ValueError(f"{field_name} debe tener exactamente 11 dígitos numéricos")
     return value
 
 def validate_name(value: str, field_name: str = "Nombre") -> str:

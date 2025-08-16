@@ -25,7 +25,7 @@ def guardar_tasa_automatica():
 scheduler = BackgroundScheduler(timezone=venezuela_tz)
 scheduler.add_job(
     guardar_tasa_automatica,
-    CronTrigger(hour='16', minute="01") 
+    CronTrigger(hour='16', minute="01") #hora en la que se ejecuta automaticamente el scheduler
 )
 
 print("[APSCHEDULER] Scheduler configurado, esperando inicio...") 

@@ -1,5 +1,6 @@
+from fastapi import UploadFile
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import List, Optional, Dict, Any
 from datetime import date, datetime
 from backend.validators.mixins import *
 
@@ -52,7 +53,7 @@ class Venta(BaseModel, VentaValidators):
     """
     id_venta: Optional[int] = Field(None, description="ID único de la venta (AUTOINCREMENT)")
     monto_total_bs: float = Field(..., description="Monto total de la venta en Bolívares")
-    fecha: date = Field(..., description="Fecha de la venta")
+    fecha_hora: Optional[datetime] = Field(..., default_factory=datetime.now, description="Fecha y hora de la venta")
     monto_total_usd: float = Field(..., description="Monto total de la venta en Dólares")
     tipo: str = Field(..., description="Tipo de venta ('credito' o 'de_contado')")
     ci_cliente: Optional[str] = Field(None, description="CI del cliente asociado a la venta (opcional)")
@@ -108,16 +109,28 @@ class Proveedor(BaseModel, ProveedorValidators):
     def __repr__(self) -> str:
         return f"Proveedor(Rif: {self.Rif}, Razón Social: {self.razon_social})"
 
-class Producto(BaseModel, ProductoValidators):
+class ProductoBase(BaseModel, ProductoValidators):
     """
     Modelo para la tabla 'Productos' .
     Información general de un producto.
     """
-    cod_producto: str = Field(..., description="Código único del producto (clave primaria)")
+    cod_producto: str = Field(..., description="Código único del producto")
     nombre: str = Field(..., description="Nombre del producto")
-    precio: float = Field(..., description="Precio del producto")
-    id_categoria: Optional[int] = Field(None, description="ID de la categoría del producto (clave foránea)")
+    precio_usd: float = Field(..., description="Precio del producto")
+    id_categoria: Optional[int] = Field(None, description="ID de la categoría")
+    
+class ProductoCreate(ProductoBase):
+    """
+    Modelo de la tabla Producto para entrada (creación con archivo).
+    """
+    img: UploadFile = Field(..., description="Archivo de imagen del producto. Solo para recepción en el contexto de una petición HTTP.")
 
+class Producto(ProductoBase):
+    """
+    Modelo de la tabla Producto para salida y base de datos
+    """
+    img: Optional[str] = Field(..., description="URL de la imagen del producto")
+    
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump()
 
@@ -149,7 +162,7 @@ class ProductoPreparado(BaseModel, ProductoPreparadoValidators):
 class ProductoNoPreparado(BaseModel, ProductoNoPreparadoValidators):
     """
     Modelo para la tabla 'Productos_noPreparados' .
-    Extiende la información de un producto si no es preparado (inventariable).
+Extiende la información de un producto si no es preparado (inventariable).
     """
     cod_producto_noPreparado: str = Field(..., description="Código del producto no preparado (clave primaria y foránea)")
     cant_min: int = Field(..., description="Cantidad mínima en inventario para alerta")
@@ -176,6 +189,7 @@ class Compra(BaseModel):
     id_compra: Optional[int] = Field(None, description="ID único de la compra (AUTOINCREMENT)")
     fecha: date = Field(..., description="Fecha de la compra")
     Rif: str = Field(..., description="RIF del proveedor de la compra (clave foránea)")
+    gasto_total: float = Field(..., description="Gasto total de la compra.")
 
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump(mode='json')
@@ -193,6 +207,7 @@ class Credito(BaseModel):
     Gestiona los créditos otorgados a clientes.
     """
     id_credito: Optional[int] = Field(None, description="ID único del crédito (AUTOINCREMENT)")
+    id_venta: Optional[int] = Field(default=None, description="ID de la venta asociada al crédito (clave foránea)")
     ci_cliente: str = Field(..., description="CI del cliente con el crédito (clave foránea)")
     fecha_credito: date = Field(..., description="Fecha en que se otorgó el crédito")
     fecha_ultimo_abono: Optional[date] = Field(None, description="Fecha del último abono al crédito (opcional)")
@@ -216,11 +231,10 @@ class Pago(BaseModel, PagoValidators):
     Registra los pagos asociados a una venta.
     """
     id_pago: Optional[int] = Field(None, description="ID único del pago (AUTOINCREMENT)")
-    id_venta: int = Field(..., description="ID de la venta asociada al pago (clave foránea)")
-    num_cor: str = Field(..., description="Número correlativo del pago")
+    id_venta: Optional[int] = Field(default=None, description="ID de la venta asociada al pago (clave foránea)")
     monto: float = Field(..., description="Monto del pago")
     fecha_pago: date = Field(..., description="Fecha en que se realizó el pago")
-    metodo_pago: str = Field(..., description="Método de pago ('efectivo_bs', 'efectvo_usd', 'pago_movil', 'debito', 'transferencia')")
+    metodo_pago: str = Field(..., description="Método de pago ('efectivo_bs', 'efectivo_usd', 'pago_movil', 'debito', 'transferencia')")
     referencia: Optional[str] = Field(None, description="Referencia del pago (ej. número de transferencia)")
     num_tefl: Optional[str] = Field(None, description="Número de teléfono asociado al pago móvil (opcional)")
 
@@ -234,96 +248,156 @@ class Pago(BaseModel, PagoValidators):
     def __repr__(self) -> str:
         return f"Pago(ID: {self.id_pago}, Venta ID: {self.id_venta}, Monto: {self.monto}, Método: {self.metodo_pago})"
 
-class Inventario(BaseModel, InventarioValidators):
+class Movimiento(BaseModel, MovimientoValidators):
     """
-    Modelo para la tabla 'Inventarios' .
+    Modelo para la tabla 'Movimientos' .
     Registra los movimientos de inventario de un producto.
     """
-    id_inventario: Optional[int] = Field(None, description="ID único del movimiento de inventario (AUTOINCREMENT)")
+    id_movimiento: Optional[int] = Field(None, description="ID único del movimiento de inventario (AUTOINCREMENT)")
     cod_producto: str = Field(..., description="Código del producto afectado (clave foránea)")
     referencia: str = Field(..., description="Referencia del movimiento ('compra', 'venta', 'descarte', 'ajuste', 'traslado_tienda', 'autoconsumo')")
     comentario: Optional[str] = Field(None, description="Comentario adicional sobre el movimiento (opcional)")
     tipo_movimiento: str = Field(..., description="Tipo de movimiento ('entrada' o 'salida')")
     cant_movida: int = Field(..., description="Cantidad de producto movida")
+    costo_unitario: Optional[float] = Field(..., description="Costo de compra del producto")
+    id_compra: Optional[float] = Field(..., description="ID de la compra asociada al producto")
     fc_actualizacion: date = Field(..., description="Fecha de actualización del movimiento")
 
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump(mode='json')
 
     @staticmethod
-    def from_dict(data: Dict[str, Any]) -> 'Inventario':
-        return Inventario(**data)
+    def from_dict(data: Dict[str, Any]) -> 'Movimiento':
+        return Movimiento(**data)
 
     def __repr__(self) -> str:
-        return f"Inventario(ID: {self.id_inventario}, Producto: {self.cod_producto}, Tipo: {self.tipo_movimiento}, Cant: {self.cant_movida})"
-
+        return f"Movimiento(ID: {self.id_movimiento}, Producto: {self.cod_producto}, Tipo: {self.tipo_movimiento}, Cant: {self.cant_movida})"
+    
 class DetalleVenta(BaseModel, DetalleVentaValidators):
     """
     Modelo para la tabla 'Detalle_Venta' .
     Detalle de los productos incluidos en una venta.
     """
-    id_detalle: Optional[int] = Field(None, description="ID único del detalle de venta (AUTOINCREMENT)")
-    id_venta: int = Field(..., description="ID de la venta a la que pertenece el detalle (clave foránea)")
-    id_producto: str = Field(..., description="ID del producto en el detalle (clave foránea)")
+    id_detalle: Optional[int] = Field(default=None, description="ID único del detalle de venta (AUTOINCREMENT)")
+    id_venta: Optional[int] = Field(default=None, description="ID de la venta a la que pertenece el detalle (clave foránea)")
+    cod_producto: str = Field(..., description="Codigo del producto en el detalle (clave foránea)")
     cantidad_producto: int = Field(..., description="Cantidad del producto vendido")
     precio_unitario: float = Field(..., description="Precio unitario del producto al momento de la venta")
 
+    # Configuración del modelo
+    model_config = {
+        "extra": "ignore"  # Ignora campos extra si los hay
+    }
+
     def to_dict(self) -> Dict[str, Any]:
-        return self.model_dump()
+        return self.model_dump(exclude_none=True)  # Excluye campos None
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> 'DetalleVenta':
-        return DetalleVenta(**data)
+        filtered_data = {k: v for k, v in data.items() if v is not None}
+        return DetalleVenta(**filtered_data)
 
     def __repr__(self) -> str:
-        return f"DetalleVenta(ID: {self.id_detalle}, Venta ID: {self.id_venta}, Producto: {self.id_producto}, Cant: {self.cantidad_producto})"
+        return f"DetalleVenta(ID: {self.id_detalle}, Venta ID: {self.id_venta}, Producto: {self.cod_producto}, Cant: {self.cantidad_producto})"
 
-class CompraInventario(BaseModel, CompraInventarioValidators):
+class VentaTransaccionPayload(BaseModel):
+    venta: Venta
+    detalles: List[DetalleVenta]
+    pago: Pago
+    
+#modelos especiales pare credito
+class VentaCreditoTransaccionPayload(BaseModel):
     """
-    Modelo para la tabla 'Compra_Inventario' .
-    Tabla de unión para registrar qué productos se compraron en una compra y cómo afectaron el inventario.
+    Payload para ventas a crédito que incluye venta, detalles, crédito y pago inicial opcional
     """
-    id_compra: int = Field(..., description="ID de la compra (parte de la clave primaria y foránea)")
-    id_inventario: int = Field(..., description="ID del movimiento de inventario (parte de la clave primaria y foránea)")
-    cod_producto: str = Field(..., description="Código del producto (parte de la clave primaria y foránea)")
-    cant_comprada: int = Field(..., description="Cantidad comprada de este producto en esta compra")
-    monto_unitario: float = Field(..., description="Monto unitario de compra de este producto")
+    venta: Venta
+    detalles: List[DetalleVenta]
+    credito: Credito
+    pago_inicial: Optional[Pago] = None
+    
+    # @validator('venta')
+    # def validate_venta_credito(cls, v):
+    #     if v.tipo != 'credito':
+    #         raise ValueError('El tipo de venta debe ser "credito"')
+    #     if not v.ci_cliente:
+    #         raise ValueError('Las ventas a crédito requieren un cliente')
+    #     return v
+    
+    # @validator('credito')
+    # def validate_credito_data(cls, v, values):
+    #     if 'venta' in values:
+    #         venta = values['venta']
+    #         if v.ci_cliente != venta.ci_cliente:
+    #             raise ValueError('El cliente del crédito debe coincidir con el de la venta')
+    #         if abs(v.monto_total - venta.monto_total_usd) > 0.01:
+    #             raise ValueError('El monto total del crédito debe coincidir con el monto USD de la venta')
+    #     return v
+    
+    # @validator('pago_inicial')
+    # def validate_pago_inicial(cls, v, values):
+    #     if v and 'venta' in values and 'credito' in values:
+    #         venta = values['venta']
+    #         credito = values['credito']
+            
+    #         if v.monto > venta.monto_total_bs:
+    #             raise ValueError('El pago inicial no puede ser mayor al total de la venta en BS')
+                
+    #         # Convertir pago inicial a USD para comparar con crédito
+    #         if venta.monto_total_bs > 0:
+    #             pago_inicial_usd = v.monto / (venta.monto_total_bs / venta.monto_total_usd)
+    #             if abs(credito.monto_pagado - pago_inicial_usd) > 0.01:
+    #                 raise ValueError('El monto pagado del crédito debe coincidir con el pago inicial en USD')
+    #     return v
 
-    def to_dict(self) -> Dict[str, Any]:
-        return self.model_dump()
-
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> 'CompraInventario':
-        return CompraInventario(**data)
-
-    def __repr__(self) -> str:
-        return f"CompraInventario(Compra ID: {self.id_compra}, Inventario ID: {self.id_inventario}, Producto: {self.cod_producto})"
-
+class VentaUnificadaPayload(BaseModel):
     """
-    Clase para gestionar la conexión a la base de datos SQLite
-    y la creación de las tablas.
+    Payload unificado que puede manejar tanto ventas de contado como a crédito
     """
-    def __init__(self, db_path: str = 'cafetin_management.db'):
-        self.db_path = db_path
-        self.conn: Optional[sqlite3.Connection] = None
-        self.cursor: Optional[sqlite3.Cursor] = None
+    venta: Venta
+    detalles: List[DetalleVenta]
+    pago: Optional[Pago] = None
+    credito: Optional[Credito] = None
+    tipo_transaccion: str = Field(..., description="Tipo de transacción: 'de_contado' o 'credito'")
+    
+    # @validator('tipo_transaccion')
+    # def validate_tipo_transaccion(cls, v):
+    #     if v not in ['de_contado', 'credito']:
+    #         raise ValueError('tipo_transaccion debe ser "de_contado" o "credito"')
+    #     return v
+    
+    # @validator('pago')
+    # def validate_pago_por_tipo(cls, v, values):
+    #     if 'tipo_transaccion' in values:
+    #         tipo = values['tipo_transaccion']
+    #         if tipo == 'de_contado' and not v:
+    #             raise ValueError('Las ventas de contado requieren datos de pago')
+    #     return v
+    
+    # @validator('credito')
+    # def validate_credito_por_tipo(cls, v, values):
+    #     if 'tipo_transaccion' in values:
+    #         tipo = values['tipo_transaccion']
+    #         if tipo == 'credito' and not v:
+    #             raise ValueError('Las ventas a crédito requieren datos del crédito')
+    #     return v
 
-    def connect(self):
-        """Establece la conexión a la base de datos."""
-        try:
-            self.conn = sqlite3.connect(self.db_path)
-            self.conn.row_factory = sqlite3.Row # Para acceder a las columnas por nombre
-            self.cursor = self.conn.cursor()
-            print(f"Conectado a la base de datos: {self.db_path}")
-        except sqlite3.Error as e:
-            print(f"Error al conectar a la base de datos: {e}")
-            self.conn = None
-            self.cursor = None
-
-    def close(self):
-        """Cierra la conexión a la base de datos."""
-        if self.conn:
-            self.conn.close()
-            print("Conexión a la base de datos cerrada.")
-            self.conn = None
-            self.cursor = None
+# Modelo para respuestas de ventas a crédito
+class VentaCreditoResponse(BaseModel):
+    """
+    Respuesta para ventas a crédito registradas exitosamente
+    """
+    success: bool
+    message: str
+    id_venta: int
+    id_credito: int
+    id_pago_inicial: Optional[int] = None
+    productos_actualizados: dict
+    
+class EstadisticasCredito(BaseModel):
+    """
+    Modelo para estadísticas de créditos
+    """
+    total_creditos_activos: int
+    monto_total_pendiente: float
+    creditos_vencidos: int
+    promedio_dias_pago: Optional[float] = None
